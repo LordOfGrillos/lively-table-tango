@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { 
   Select, 
@@ -11,7 +11,6 @@ import {
 import { TableProps, TableShape } from "@/components/tables/TableShape";
 import { Layers, Plus, Save, X, CornerDownLeft } from "lucide-react";
 import { toast } from "sonner";
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 
 type TableWithPosition = Omit<TableProps, 'onClick'> & { 
   position: { x: number; y: number };
@@ -30,6 +29,16 @@ export function TableLayoutEditor({
 }: TableLayoutEditorProps) {
   const [selectedTableType, setSelectedTableType] = useState<'round' | 'rectangular'>('round');
   const [selectedCapacity, setSelectedCapacity] = useState('2');
+  const [draggedTable, setDraggedTable] = useState<string | null>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
+  
+  // Track positions for proper drag handling
+  const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>(
+    tables.reduce((acc, table) => {
+      acc[table.id] = table.position;
+      return acc;
+    }, {} as Record<string, { x: number; y: number }>)
+  );
   
   const handleAddTable = () => {
     const newTableNumber = `T${tables.length + 30}`;
@@ -42,46 +51,94 @@ export function TableLayoutEditor({
       position: { x: 20, y: 20 } // Default position
     };
     
-    onTablesUpdate([...tables, newTable]);
+    const updatedTables = [...tables, newTable];
+    onTablesUpdate(updatedTables);
+    
+    // Add the new table position to our positions state
+    setPositions(prev => ({
+      ...prev,
+      [newTable.id]: newTable.position
+    }));
+    
     toast.success(`Table ${newTableNumber} added`);
   };
   
-  const handleDragEnd = (result: DropResult) => {
-    if (!result.destination) return;
+  const handleDragStart = (tableId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    setDraggedTable(tableId);
     
-    const { source, destination, draggableId } = result;
+    // Store the initial mouse position
+    const initialMousePos = { x: e.clientX, y: e.clientY };
     
-    // Create a copy of the tables array
-    const updatedTables = [...tables];
+    // Find the initial position of the table
+    const initialTablePos = positions[tableId];
     
-    // Find the table being dragged
-    const tableIndex = updatedTables.findIndex(table => table.id === draggableId);
-    if (tableIndex === -1) return;
-    
-    // Update the position based on the drop location
-    // Note: Here we calculate position based on the drop coordinates
-    // In a real app, you might want to snap to a grid or check for collisions
-    const newPosition = {
-      x: destination.x - source.x + updatedTables[tableIndex].position.x,
-      y: destination.y - source.y + updatedTables[tableIndex].position.y
+    // Handler for mouse movement
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      if (!draggedTable) return;
+      
+      // Calculate how far the mouse has moved
+      const deltaX = moveEvent.clientX - initialMousePos.x;
+      const deltaY = moveEvent.clientY - initialMousePos.y;
+      
+      // Update the table position
+      const newPositions = {
+        ...positions,
+        [tableId]: {
+          x: initialTablePos.x + deltaX,
+          y: initialTablePos.y + deltaY
+        }
+      };
+      
+      setPositions(newPositions);
     };
     
-    updatedTables[tableIndex] = {
-      ...updatedTables[tableIndex],
-      position: newPosition
+    // Handler for mouse up (end drag)
+    const handleMouseUp = () => {
+      if (!draggedTable) return;
+      
+      // Update tables with new positions
+      const updatedTables = tables.map(table => 
+        table.id === tableId
+          ? { ...table, position: positions[tableId] }
+          : table
+      );
+      
+      // Apply the changes
+      onTablesUpdate(updatedTables);
+      setDraggedTable(null);
+      
+      // Remove event listeners
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
     };
     
-    onTablesUpdate(updatedTables);
+    // Add event listeners for dragging
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
   };
   
   const handleRemoveTable = (tableId: string) => {
     const updatedTables = tables.filter(table => table.id !== tableId);
     onTablesUpdate(updatedTables);
+    
+    // Remove from positions state
+    const newPositions = { ...positions };
+    delete newPositions[tableId];
+    setPositions(newPositions);
+    
     toast.success("Table removed");
   };
   
   const handleSaveLayout = () => {
-    // In a real app, you would save to a database here
+    // Create a new array that preserves the positions
+    const updatedTables = tables.map(table => ({
+      ...table,
+      position: positions[table.id] // Use the positions from our state
+    }));
+    
+    // Update the tables with their current positions
+    onTablesUpdate(updatedTables);
     toast.success("Layout saved successfully");
     onClose();
   };
@@ -180,51 +237,45 @@ export function TableLayoutEditor({
           </div>
         </div>
         
-        <div className="flex-1 p-4 overflow-auto bg-gray-100 relative">
-          <DragDropContext onDragEnd={handleDragEnd}>
-            <Droppable droppableId="tables-layout" type="TABLE">
-              {(provided) => (
-                <div
-                  className="min-h-full w-full relative"
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                >
-                  {tables.map((table, index) => (
-                    <Draggable key={table.id} draggableId={table.id} index={index}>
-                      {(provided) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          style={{
-                            position: 'absolute',
-                            left: table.position.x,
-                            top: table.position.y,
-                            ...provided.draggableProps.style,
-                          }}
-                          className="group"
-                        >
-                          <TableShape
-                            {...table}
-                            className="shadow-md"
-                          />
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="absolute -top-2 -right-2 h-6 w-6 bg-red-100 text-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => handleRemoveTable(table.id)}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
+        <div 
+          ref={canvasRef}
+          className="flex-1 p-4 overflow-auto bg-gray-100 relative" 
+        >
+          {tables.map((table) => (
+            <div
+              key={table.id}
+              style={{
+                position: 'absolute',
+                left: `${positions[table.id]?.x || table.position.x}px`,
+                top: `${positions[table.id]?.y || table.position.y}px`,
+                cursor: draggedTable === table.id ? 'grabbing' : 'grab'
+              }}
+              className="group"
+              onMouseDown={(e) => handleDragStart(table.id, e)}
+            >
+              <TableShape
+                {...table}
+                className="shadow-md z-10"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute -top-2 -right-2 h-6 w-6 bg-red-100 text-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemoveTable(table.id);
+                }}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          ))}
+          
+          {tables.length === 0 && (
+            <div className="absolute inset-0 flex items-center justify-center text-gray-500">
+              No tables on this floor. Use the controls to add tables.
+            </div>
+          )}
         </div>
       </div>
     </div>

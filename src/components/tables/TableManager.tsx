@@ -140,7 +140,13 @@ export function TableManager() {
       floorId: currentFloor
     }));
     
-    setTables([...otherFloorTables, ...floorsUpdatedTables]);
+    // Make sure the positions are properly maintained
+    const tablesWithPositions = floorsUpdatedTables.map(table => ({
+      ...table,
+      position: table.position // Explicitly keep the positions
+    }));
+    
+    setTables([...otherFloorTables, ...tablesWithPositions]);
   };
   
   // Toggle edit mode
@@ -163,6 +169,11 @@ export function TableManager() {
     
     return () => clearInterval(timerInterval);
   }, []);
+  
+  useEffect(() => {
+    // Log the tables to help debug position issues
+    console.log("Current tables:", filteredTables);
+  }, [filteredTables]);
   
   return (
     <div className="h-full">
