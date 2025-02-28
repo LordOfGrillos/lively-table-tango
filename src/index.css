@@ -99,6 +99,11 @@
 .table-shape {
   position: relative;
   transition: all 0.3s ease;
+  cursor: grab;
+}
+
+.table-shape:active {
+  cursor: grabbing;
 }
 
 .table-shape:hover {
@@ -108,11 +113,15 @@
 .table-round {
   border-radius: 50%;
   aspect-ratio: 1;
+  width: 80px;
+  height: 80px;
 }
 
 .table-rectangular {
   border-radius: 30px;
   aspect-ratio: 1.7;
+  width: 120px;
+  height: 70px;
 }
 
 .timer-badge {
@@ -137,4 +146,14 @@
 
 .table-selected {
   animation: select-pulse 2s infinite;
+}
+
+/* Hide scrollbar but allow scrolling */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari, Opera */
 }
