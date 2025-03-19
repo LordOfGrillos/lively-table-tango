@@ -147,14 +147,52 @@ export function PaymentModal({ open, onClose, order, onPaymentComplete }: Paymen
 
         {paymentStatus === "success" && (
           <PaymentSuccess
-            tipAmount={paymentStatus === "customer-payment" 
-              ? getCurrentCustomerTipAmount() 
-              : tipAmount}
-            calculateTotalWithTip={paymentStatus === "customer-payment" 
-              ? getCurrentCustomerTotal 
-              : calculateTotalWithTip}
-            customerName={paymentStatus === "customer-payment" ? getCurrentCustomerName() : undefined}
+            tipAmount={tipAmount}
+            calculateTotalWithTip={calculateTotalWithTip}
+            customerName={undefined}
           />
+        )}
+
+        {paymentStatus === "customer-payment" && (
+          <>
+            <PaymentMethods
+              paymentMethods={paymentMethods}
+              selectedPaymentMethod={selectedPaymentMethod}
+              setSelectedPaymentMethod={setSelectedPaymentMethod}
+            />
+            
+            <div className="py-4 space-y-4">
+              <div className="border-t pt-4">
+                <div className="flex justify-between text-sm mb-1">
+                  <span>Subtotal:</span>
+                  <span>${customers[currentCustomerIndex]?.total.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span>Tip:</span>
+                  <span>${customers[currentCustomerIndex]?.tipAmount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between font-medium">
+                  <span>Total:</span>
+                  <span>${getCustomerTotalWithTip(customers[currentCustomerIndex]?.id).toFixed(2)}</span>
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-2">
+                <button 
+                  className="bg-muted px-4 py-2 rounded-md text-sm font-medium"
+                  onClick={() => setPaymentStatus("split-summary")}
+                >
+                  Back
+                </button>
+                <button 
+                  className="bg-app-purple hover:bg-app-purple/90 text-white px-4 py-2 rounded-md text-sm font-medium"
+                  onClick={handlePaymentSubmit}
+                >
+                  Pay Now
+                </button>
+              </div>
+            </div>
+          </>
         )}
 
         {paymentStatus === "cash-input" && (
@@ -214,48 +252,6 @@ export function PaymentModal({ open, onClose, order, onPaymentComplete }: Paymen
           />
         )}
 
-        {paymentStatus === "customer-payment" && (
-          <>
-            <PaymentMethods
-              paymentMethods={paymentMethods}
-              selectedPaymentMethod={selectedPaymentMethod}
-              setSelectedPaymentMethod={setSelectedPaymentMethod}
-            />
-            
-            <div className="py-4 space-y-4">
-              <div className="border-t pt-4">
-                <div className="flex justify-between text-sm mb-1">
-                  <span>Subtotal:</span>
-                  <span>${customers[currentCustomerIndex]?.total.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>Tip:</span>
-                  <span>${customers[currentCustomerIndex]?.tipAmount.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between font-medium">
-                  <span>Total:</span>
-                  <span>${getCustomerTotalWithTip(customers[currentCustomerIndex]?.id).toFixed(2)}</span>
-                </div>
-              </div>
-              
-              <div className="flex justify-end gap-2">
-                <button 
-                  className="bg-muted px-4 py-2 rounded-md text-sm font-medium"
-                  onClick={() => setPaymentStatus("split-summary")}
-                >
-                  Back
-                </button>
-                <button 
-                  className="bg-app-purple hover:bg-app-purple/90 text-white px-4 py-2 rounded-md text-sm font-medium"
-                  onClick={handlePaymentSubmit}
-                >
-                  Pay Now
-                </button>
-              </div>
-            </div>
-          </>
-        )}
-
         {paymentStatus === "customer-cash-input" && (
           <PaymentCashInput
             order={order}
@@ -268,7 +264,7 @@ export function PaymentModal({ open, onClose, order, onPaymentComplete }: Paymen
               if (status === "idle") {
                 setPaymentStatus("customer-payment");
               } else {
-                setPaymentStatus(status as PaymentStatus);
+                setPaymentStatus(status);
               }
             }}
           />
