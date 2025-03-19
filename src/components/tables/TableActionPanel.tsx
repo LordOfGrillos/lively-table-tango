@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,11 +10,11 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { TableStatus } from "@/components/tables/TableShape";
-import { Calendar, Clock, Users, X, ShoppingCart, Search, List, CheckCircle2 } from "lucide-react";
+import { Calendar, Clock, Users, X, ShoppingCart, Search, List, CheckCircle2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MenuList } from "@/components/menu/MenuList";
-import { MenuItemType } from "@/components/menu/MenuItem";
+import { MenuItemType, ItemCustomization, Extra } from "@/components/menu/MenuItem";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -26,6 +25,10 @@ export interface OrderItem {
   price: number;
   quantity: number;
   status: 'pending' | 'cooking' | 'served';
+  customizations?: {
+    removedIngredients: string[];
+    extras: Extra[];
+  };
 }
 
 export interface Order {
@@ -72,14 +75,14 @@ export function TableActionPanel({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
   
-  // Order state
   const [currentOrder, setCurrentOrder] = useState<OrderItem[]>(
     existingOrder?.items.map(item => ({
       id: item.id,
       name: item.name,
       price: item.price,
       quantity: item.quantity,
-      status: item.status
+      status: item.status,
+      customizations: item.customizations
     })) || []
   );
 
@@ -118,7 +121,6 @@ export function TableActionPanel({
     onReservationCreate?.(selectedTable.id, reservationData);
     handleStatusChange('reserved');
     
-    // Reset form
     setCustomerName("");
     setCustomerPhone("");
     setGuestCount(1);
@@ -126,31 +128,59 @@ export function TableActionPanel({
     setSelectedTime("");
   };
   
-  const handleAddToOrder = (item: MenuItemType, quantity: number) => {
-    // Check if item already exists in order
-    const existingItemIndex = currentOrder.findIndex(orderItem => orderItem.id === item.id);
+  const handleAddToOrder = (item: MenuItemType, quantity: number, customizations?: ItemCustomization) => {
+    let itemPrice = item.price;
+    
+    if (customizations?.extras && customizations.extras.length > 0) {
+      const extrasCost = customizations.extras.reduce((total, extra) => total + extra.price, 0);
+      itemPrice += extrasCost;
+    }
+    
+    const existingItemIndex = currentOrder.findIndex(orderItem => {
+      if (orderItem.id !== item.id) return false;
+      
+      if (!orderItem.customizations && !customizations) return true;
+      
+      if (!orderItem.customizations || !customizations) return false;
+      
+      const removedIngredientsMatch = 
+        orderItem.customizations.removedIngredients.length === customizations.removedIngredients.length &&
+        orderItem.customizations.removedIngredients.every(ing => 
+          customizations.removedIngredients.includes(ing)
+        );
+        
+      const extrasMatch = 
+        orderItem.customizations.extras.length === customizations.extras.length &&
+        orderItem.customizations.extras.every(extra => 
+          customizations.extras.some(e => e.name === extra.name && e.price === extra.price)
+        );
+        
+      return removedIngredientsMatch && extrasMatch;
+    });
     
     if (existingItemIndex >= 0) {
-      // Update existing item quantity
       const updatedOrder = [...currentOrder];
       updatedOrder[existingItemIndex].quantity += quantity;
       setCurrentOrder(updatedOrder);
     } else {
-      // Add new item to order
       setCurrentOrder([
         ...currentOrder,
         {
           id: item.id,
           name: item.name,
-          price: item.price,
+          price: itemPrice,
           quantity,
-          status: 'pending'
+          status: 'pending',
+          customizations
         }
       ]);
     }
     
-    toast.success(`${quantity}× ${item.name} added to order`, {
-      description: `Table ${selectedTable.number}`
+    const customizationSummary = customizations ? 
+      `(${customizations.removedIngredients.length > 0 ? 'Removed items, ' : ''}${customizations.extras.length > 0 ? 'Added extras' : ''})` : '';
+    
+    toast.success(`${quantity}× ${item.name} ${customizationSummary} added to order`, {
+      description: `Table ${selectedTable?.number}`
     });
   };
   
@@ -210,7 +240,6 @@ export function TableActionPanel({
       description: `Table ${selectedTable.number} order placed`
     });
     
-    // Reset form
     setCurrentOrder([]);
     setCustomerName("");
   };
@@ -234,7 +263,6 @@ export function TableActionPanel({
   const handleCompleteOrder = () => {
     if (!existingOrder || !onOrderUpdate) return;
     
-    // Mark all items as served
     const updatedItems = currentOrder.map(item => ({
       ...item,
       status: 'served' as const
@@ -253,7 +281,6 @@ export function TableActionPanel({
       description: `Table ${selectedTable.number} order is now complete`
     });
     
-    // Auto close panel
     onClose();
   };
 
@@ -395,14 +422,34 @@ export function TableActionPanel({
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        {currentOrder.map(item => (
-                          <Card key={item.id} className="p-2 text-sm">
+                        {currentOrder.map((item, index) => (
+                          <Card key={index} className="p-2 text-sm">
                             <div className="flex justify-between">
                               <div>
                                 <div className="font-medium">{item.name}</div>
                                 <div className="text-gray-500">
-                                  ${item.price.toFixed(2)} × {item.quantity}
+                                  ${(item.price).toFixed(2)} × {item.quantity}
                                 </div>
+                                
+                                {item.customizations && (
+                                  <div className="mt-1 text-xs">
+                                    {item.customizations.removedIngredients.length > 0 && (
+                                      <div className="flex items-center gap-1 text-red-600">
+                                        <AlertTriangle className="h-3 w-3" />
+                                        <span>No: {item.customizations.removedIngredients.join(", ")}</span>
+                                      </div>
+                                    )}
+                                    
+                                    {item.customizations.extras.length > 0 && (
+                                      <div className="flex items-center gap-1 text-green-600">
+                                        <Plus className="h-3 w-3" />
+                                        <span>
+                                          {item.customizations.extras.map(e => `${e.name} (+$${e.price.toFixed(2)})`).join(", ")}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                               <div className="text-right">
                                 ${(item.price * item.quantity).toFixed(2)}

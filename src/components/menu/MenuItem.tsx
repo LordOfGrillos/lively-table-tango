@@ -2,7 +2,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Minus, Plus } from "lucide-react";
+import { Minus, Plus, Settings } from "lucide-react";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { ItemCustomizationModal } from "./ItemCustomizationModal";
 
 export interface MenuItemType {
   id: string;
@@ -11,15 +13,27 @@ export interface MenuItemType {
   price: number;
   category: string;
   image?: string;
+  ingredients?: string[];
 }
 
 interface MenuItemProps {
   item: MenuItemType;
-  onAddToOrder: (item: MenuItemType, quantity: number) => void;
+  onAddToOrder: (item: MenuItemType, quantity: number, customizations?: ItemCustomization) => void;
+}
+
+export interface ItemCustomization {
+  removedIngredients: string[];
+  extras: Extra[];
+}
+
+export interface Extra {
+  name: string;
+  price: number;
 }
 
 export function MenuItem({ item, onAddToOrder }: MenuItemProps) {
   const [quantity, setQuantity] = useState(1);
+  const [isCustomizing, setIsCustomizing] = useState(false);
 
   const increaseQuantity = () => {
     setQuantity(prev => prev + 1);
@@ -31,9 +45,10 @@ export function MenuItem({ item, onAddToOrder }: MenuItemProps) {
     }
   };
 
-  const handleAddToOrder = () => {
-    onAddToOrder(item, quantity);
+  const handleAddToOrder = (customizations?: ItemCustomization) => {
+    onAddToOrder(item, quantity, customizations);
     setQuantity(1); // Reset quantity after adding
+    setIsCustomizing(false);
   };
 
   return (
@@ -65,13 +80,32 @@ export function MenuItem({ item, onAddToOrder }: MenuItemProps) {
             <Plus className="h-4 w-4" />
           </Button>
         </div>
-        <Button 
-          size="sm" 
-          className="bg-app-purple hover:bg-app-purple/90"
-          onClick={handleAddToOrder}
-        >
-          Add to Order
-        </Button>
+        <div className="flex gap-2">
+          <Dialog open={isCustomizing} onOpenChange={setIsCustomizing}>
+            <DialogTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="flex items-center gap-1"
+              >
+                <Settings className="h-4 w-4" />
+                Customize
+              </Button>
+            </DialogTrigger>
+            <ItemCustomizationModal 
+              item={item} 
+              onAddToOrder={handleAddToOrder}
+              quantity={quantity}
+            />
+          </Dialog>
+          <Button 
+            size="sm" 
+            className="bg-app-purple hover:bg-app-purple/90"
+            onClick={() => handleAddToOrder()}
+          >
+            Add to Order
+          </Button>
+        </div>
       </div>
     </Card>
   );

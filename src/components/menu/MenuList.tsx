@@ -1,10 +1,10 @@
 
 import { MenuCategory } from "./MenuCategory";
-import { MenuItemType } from "./MenuItem";
+import { MenuItemType, ItemCustomization } from "./MenuItem";
 import { getMenuByCategory } from "@/data/menuData";
 
 interface MenuListProps {
-  onAddToOrder: (item: MenuItemType, quantity: number) => void;
+  onAddToOrder: (item: MenuItemType, quantity: number, customizations?: ItemCustomization) => void;
   searchQuery?: string;
   selectedCategory?: string;
 }

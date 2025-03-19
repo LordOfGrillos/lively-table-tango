@@ -1,12 +1,12 @@
 
 import { useState } from "react";
-import { MenuItem, MenuItemType } from "./MenuItem";
+import { MenuItem, MenuItemType, ItemCustomization } from "./MenuItem";
 import { Badge } from "@/components/ui/badge";
 
 interface MenuCategoryProps {
   category: string;
   items: MenuItemType[];
-  onAddToOrder: (item: MenuItemType, quantity: number) => void;
+  onAddToOrder: (item: MenuItemType, quantity: number, customizations?: ItemCustomization) => void;
 }
 
 export function MenuCategory({ category, items, onAddToOrder }: MenuCategoryProps) {
