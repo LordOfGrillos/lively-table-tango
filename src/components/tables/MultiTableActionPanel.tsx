@@ -6,8 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TableWithPosition } from "@/components/tables/manager/useTableManager";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { TableMergeIcon } from "@/components/tables/icons/TableMergeIcon";
 import { 
-  TableMerge, 
   MoveRight, 
   X, 
   ListChecks
@@ -109,7 +109,7 @@ export function MultiTableActionPanel({
                   setTargetTable("");
                 }}
               >
-                <TableMerge className="h-4 w-4 mr-2" /> 
+                <TableMergeIcon className="h-4 w-4 mr-2" /> 
                 Combine Orders
               </Button>
             </div>
