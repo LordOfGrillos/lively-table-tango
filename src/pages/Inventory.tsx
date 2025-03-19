@@ -3,6 +3,7 @@ import { Header } from "@/components/layout/Header";
 import { InventoryDashboard } from "@/components/inventory/InventoryDashboard";
 import { InventoryTabs } from "@/components/inventory/InventoryTabs";
 import { InventoryProvider } from "@/components/inventory/InventoryContext";
+import { InventoryAddItem } from "@/components/inventory/InventoryAddItem";
 
 export default function Inventory() {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -20,6 +21,7 @@ export default function Inventory() {
           
           <div className="mt-4">
             {activeTab === "dashboard" && <InventoryDashboard />}
+            {activeTab === "add" && <InventoryAddItem />}
             {/* Other tabs content will be rendered based on activeTab */}
           </div>
         </div>
