@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +11,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { TableStatus } from "@/components/tables/TableShape";
-import { Calendar, Clock, Users, X, ShoppingCart, Search, List, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Calendar, Clock, Users, X, ShoppingCart, Search, List, CheckCircle2, AlertTriangle, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MenuList } from "@/components/menu/MenuList";
