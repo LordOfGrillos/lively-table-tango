@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Order } from "@/components/tables/TableActionPanel";
@@ -91,14 +90,12 @@ export function PaymentModal({ open, onClose, order, onPaymentComplete }: Paymen
     getCustomerTotalWithTip,
   } = usePaymentState(order, onPaymentComplete);
 
-  // Handle modal close - only allow closing in idle state or success state
   const handleClose = () => {
     if (paymentStatus === "idle" || paymentStatus === "success") {
       onClose();
     }
   };
 
-  // Get current customer name
   const getCurrentCustomerName = () => {
     return customers[currentCustomerIndex]?.name || "";
   };
