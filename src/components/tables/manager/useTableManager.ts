@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { TableStatus } from "@/components/tables/TableShape";
 import { Order } from "@/components/tables/TableActionPanel";
 import { Floor } from "@/components/tables/FloorManager";
+import { toast } from "sonner";
 
 // Type extending TableProps with position
 export type TableWithPosition = {
@@ -59,38 +59,29 @@ export function useTableManager(onTableSelect?: (tableId: string, tableNumber: s
   const [isEditMode, setIsEditMode] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
   
-  // Get selected table details for action panel
   const selectedTableDetails = selectedTable
     ? tables.find(table => table.id === selectedTable)
     : undefined;
     
-  // Get existing order for the selected table
   const existingOrder = selectedTable 
     ? orders.find(order => order.tableId === selectedTable && order.status !== 'completed')
     : null;
   
-  // Filter tables based on selected filters, search query, and current floor
   const filteredTables = tables.filter(table => {
-    // Check if table belongs to current floor
     const floorMatch = table.floorId === currentFloor;
     
-    // Apply status filters if any are selected
     const statusMatch = selectedFilters.length === 0 || selectedFilters.includes(table.status);
     
-    // Apply search filter
     const searchMatch = !searchQuery || 
       table.number.toLowerCase().includes(searchQuery.toLowerCase());
     
     return floorMatch && statusMatch && searchMatch;
   });
   
-  // Handle table click
   const handleTableClick = (tableId: string) => {
-    // Don't select tables in edit mode
     if (!isEditMode) {
       setSelectedTable(tableId);
       
-      // If onTableSelect is provided (when creating order), call it
       if (onTableSelect) {
         const table = tables.find(t => t.id === tableId);
         if (table) {
@@ -100,7 +91,6 @@ export function useTableManager(onTableSelect?: (tableId: string, tableNumber: s
     }
   };
   
-  // Handle status change
   const handleStatusChange = (tableId: string, newStatus: TableStatus) => {
     setTables(prevTables => 
       prevTables.map(table => 
@@ -108,39 +98,31 @@ export function useTableManager(onTableSelect?: (tableId: string, tableNumber: s
           ? { 
               ...table, 
               status: newStatus,
-              // Add or remove timer based on status
               timer: newStatus === 'occupied' ? 0 : (newStatus === 'available' ? undefined : table.timer)
             } 
           : table
       )
     );
     
-    // Auto-close action panel after status change
     setSelectedTable(null);
   };
   
-  // Handle reservation creation
   const handleReservationCreate = (tableId: string, data: any) => {
-    // Here you would typically send this to your backend
     console.log("Reservation created:", data);
     
     toast.success("Reservation created successfully", {
       description: `Table ${data.tableId} reserved for ${data.customerName}`
     });
     
-    // Auto-close action panel after reservation
     setSelectedTable(null);
   };
   
-  // Handle order creation
   const handleOrderCreate = (tableId: string, order: Order) => {
     setOrders(prevOrders => [...prevOrders, order]);
     
-    // Auto-close action panel after order creation
     setSelectedTable(null);
   };
   
-  // Handle order update
   const handleOrderUpdate = (updatedOrder: Order) => {
     setOrders(prevOrders => 
       prevOrders.map(order => 
@@ -148,50 +130,41 @@ export function useTableManager(onTableSelect?: (tableId: string, tableNumber: s
       )
     );
     
-    // If order is completed, update table status
     if (updatedOrder.status === 'completed') {
       handleStatusChange(updatedOrder.tableId, 'available');
     }
   };
 
-  // Handle floor change
   const handleFloorChange = (floorId: string) => {
     setCurrentFloor(floorId);
-    setSelectedTable(null); // Clear selected table when changing floors
+    setSelectedTable(null);
   };
 
-  // Handle floor updates
   const handleFloorsUpdate = (updatedFloors: Floor[]) => {
     setFloors(updatedFloors);
   };
 
-  // Handle tables update from layout editor
   const handleTablesUpdate = (updatedTables: TableWithPosition[]) => {
-    // Only update tables for the current floor, preserving tables from other floors
     const otherFloorTables = tables.filter(table => table.floorId !== currentFloor);
     
-    // Ensure all updated tables have the current floor ID
     const floorsUpdatedTables = updatedTables.map(table => ({
       ...table,
       floorId: currentFloor
     }));
     
-    // Make sure the positions are properly maintained
     const tablesWithPositions = floorsUpdatedTables.map(table => ({
       ...table,
-      position: table.position // Explicitly keep the positions
+      position: table.position
     }));
     
     setTables([...otherFloorTables, ...tablesWithPositions]);
   };
   
-  // Toggle edit mode
   const toggleEditMode = () => {
     setIsEditMode(!isEditMode);
-    setSelectedTable(null); // Clear selected table when toggling edit mode
+    setSelectedTable(null);
   };
   
-  // Update occupied table timers every minute
   useEffect(() => {
     const timerInterval = setInterval(() => {
       setTables(prevTables => 
@@ -201,7 +174,7 @@ export function useTableManager(onTableSelect?: (tableId: string, tableNumber: s
             : table
         )
       );
-    }, 60000); // Update every minute
+    }, 60000);
     
     return () => clearInterval(timerInterval);
   }, []);
