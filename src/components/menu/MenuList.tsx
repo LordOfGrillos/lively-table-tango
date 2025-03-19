@@ -40,7 +40,7 @@ export function MenuList({ onAddToOrder, searchQuery = "", selectedCategory }: M
   }
   
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full">
       {Object.entries(filteredCategories).map(([category, items]) => (
         <MenuCategory
           key={category}

@@ -60,12 +60,12 @@ export function MenuItem({ item, onAddToOrder }: MenuItemProps) {
           <p className="text-sm font-medium mt-1">${item.price.toFixed(2)}</p>
         </div>
       </div>
-      <div className="flex items-center justify-between mt-3">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mt-3">
         <div className="flex items-center border rounded-md">
           <Button 
             variant="ghost" 
             size="sm" 
-            className="px-2 h-8" 
+            className="p-0 w-8 h-8" 
             onClick={decreaseQuantity}
           >
             <Minus className="h-4 w-4" />
@@ -74,13 +74,13 @@ export function MenuItem({ item, onAddToOrder }: MenuItemProps) {
           <Button 
             variant="ghost" 
             size="sm" 
-            className="px-2 h-8" 
+            className="p-0 w-8 h-8" 
             onClick={increaseQuantity}
           >
             <Plus className="h-4 w-4" />
           </Button>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 w-full sm:w-auto">
           <Dialog open={isCustomizing} onOpenChange={setIsCustomizing}>
             <DialogTrigger asChild>
               <Button 
@@ -100,7 +100,7 @@ export function MenuItem({ item, onAddToOrder }: MenuItemProps) {
           </Dialog>
           <Button 
             size="sm" 
-            className="bg-app-purple hover:bg-app-purple/90"
+            className="bg-app-purple hover:bg-app-purple/90 ml-auto sm:ml-0"
             onClick={() => handleAddToOrder()}
           >
             Add to Order
