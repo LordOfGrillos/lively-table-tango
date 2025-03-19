@@ -2,11 +2,10 @@
 import { useState, useEffect } from "react";
 import { TableShape, TableStatus, TableProps } from "@/components/tables/TableShape";
 import { TableFilterBar } from "@/components/tables/TableFilterBar";
-import { TableActionPanel } from "@/components/tables/TableActionPanel";
+import { TableActionPanel, Order } from "@/components/tables/TableActionPanel";
 import { FloorManager, Floor } from "@/components/tables/FloorManager";
 import { TableLayoutEditor } from "@/components/tables/TableLayoutEditor";
 import { toast } from "sonner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
 
@@ -57,11 +56,17 @@ export function TableManager() {
   const [selectedFilters, setSelectedFilters] = useState<TableStatus[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
+  const [orders, setOrders] = useState<Order[]>([]);
   
   // Get selected table details for action panel
   const selectedTableDetails = selectedTable
     ? tables.find(table => table.id === selectedTable)
     : undefined;
+    
+  // Get existing order for the selected table
+  const existingOrder = selectedTable 
+    ? orders.find(order => order.tableId === selectedTable && order.status !== 'completed')
+    : null;
   
   // Filter tables based on selected filters, search query, and current floor
   const filteredTables = tables.filter(table => {
@@ -117,6 +122,28 @@ export function TableManager() {
     // Auto-close action panel after reservation
     setSelectedTable(null);
   };
+  
+  // Handle order creation
+  const handleOrderCreate = (tableId: string, order: Order) => {
+    setOrders(prevOrders => [...prevOrders, order]);
+    
+    // Auto-close action panel after order creation
+    setSelectedTable(null);
+  };
+  
+  // Handle order update
+  const handleOrderUpdate = (updatedOrder: Order) => {
+    setOrders(prevOrders => 
+      prevOrders.map(order => 
+        order.id === updatedOrder.id ? updatedOrder : order
+      )
+    );
+    
+    // If order is completed, update table status
+    if (updatedOrder.status === 'completed') {
+      handleStatusChange(updatedOrder.tableId, 'available');
+    }
+  };
 
   // Handle floor change
   const handleFloorChange = (floorId: string) => {
@@ -169,11 +196,6 @@ export function TableManager() {
     
     return () => clearInterval(timerInterval);
   }, []);
-  
-  useEffect(() => {
-    // Log the tables to help debug position issues
-    console.log("Current tables:", filteredTables);
-  }, [filteredTables]);
   
   return (
     <div className="h-full">
@@ -242,6 +264,9 @@ export function TableManager() {
           onClose={() => setSelectedTable(null)}
           onStatusChange={handleStatusChange}
           onReservationCreate={handleReservationCreate}
+          onOrderCreate={handleOrderCreate}
+          onOrderUpdate={handleOrderUpdate}
+          existingOrder={existingOrder}
         />
       )}
     </div>

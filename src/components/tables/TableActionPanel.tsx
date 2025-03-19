@@ -11,8 +11,33 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { TableStatus } from "@/components/tables/TableShape";
-import { Calendar, Clock, Users, X } from "lucide-react";
+import { Calendar, Clock, Users, X, ShoppingCart, Search, List, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MenuList } from "@/components/menu/MenuList";
+import { MenuItemType } from "@/components/menu/MenuItem";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+
+export interface OrderItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  status: 'pending' | 'cooking' | 'served';
+}
+
+export interface Order {
+  id: string;
+  tableId: string;
+  tableNumber: string;
+  status: 'new' | 'in-progress' | 'completed';
+  customerName?: string;
+  items: OrderItem[];
+  createdAt: Date;
+  total: number;
+}
 
 type TableActionPanelProps = {
   selectedTable?: {
@@ -24,19 +49,39 @@ type TableActionPanelProps = {
   onClose: () => void;
   onStatusChange: (tableId: string, status: TableStatus) => void;
   onReservationCreate?: (tableId: string, data: any) => void;
+  onOrderCreate?: (tableId: string, order: Order) => void;
+  onOrderUpdate?: (order: Order) => void;
+  existingOrder?: Order | null;
 };
 
 export function TableActionPanel({ 
   selectedTable, 
   onClose,
   onStatusChange,
-  onReservationCreate
+  onReservationCreate,
+  onOrderCreate,
+  onOrderUpdate,
+  existingOrder
 }: TableActionPanelProps) {
-  const [customerName, setCustomerName] = useState("");
+  const [activeTab, setActiveTab] = useState<string>(existingOrder ? "order" : "status");
+  const [customerName, setCustomerName] = useState(existingOrder?.customerName || "");
   const [customerPhone, setCustomerPhone] = useState("");
   const [guestCount, setGuestCount] = useState(1);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedTime, setSelectedTime] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
+  
+  // Order state
+  const [currentOrder, setCurrentOrder] = useState<OrderItem[]>(
+    existingOrder?.items.map(item => ({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+      status: item.status
+    })) || []
+  );
 
   if (!selectedTable) return null;
 
@@ -80,75 +125,381 @@ export function TableActionPanel({
     setSelectedDate("");
     setSelectedTime("");
   };
+  
+  const handleAddToOrder = (item: MenuItemType, quantity: number) => {
+    // Check if item already exists in order
+    const existingItemIndex = currentOrder.findIndex(orderItem => orderItem.id === item.id);
+    
+    if (existingItemIndex >= 0) {
+      // Update existing item quantity
+      const updatedOrder = [...currentOrder];
+      updatedOrder[existingItemIndex].quantity += quantity;
+      setCurrentOrder(updatedOrder);
+    } else {
+      // Add new item to order
+      setCurrentOrder([
+        ...currentOrder,
+        {
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity,
+          status: 'pending'
+        }
+      ]);
+    }
+    
+    toast.success(`${quantity}× ${item.name} added to order`, {
+      description: `Table ${selectedTable.number}`
+    });
+  };
+  
+  const calculateTotal = () => {
+    return currentOrder.reduce((total, item) => total + (item.price * item.quantity), 0);
+  };
+  
+  const handleRemoveItem = (itemId: string) => {
+    setCurrentOrder(currentOrder.filter(item => item.id !== itemId));
+  };
+  
+  const handleUpdateItemStatus = (itemId: string, status: 'pending' | 'cooking' | 'served') => {
+    const updatedOrder = currentOrder.map(item => 
+      item.id === itemId ? { ...item, status } : item
+    );
+    
+    setCurrentOrder(updatedOrder);
+    
+    if (existingOrder && onOrderUpdate) {
+      const updatedExistingOrder = {
+        ...existingOrder,
+        items: updatedOrder,
+        status: status === 'served' && updatedOrder.every(item => item.status === 'served') 
+          ? 'completed' 
+          : existingOrder.status === 'new' ? 'in-progress' : existingOrder.status
+      };
+      onOrderUpdate(updatedExistingOrder);
+    }
+  };
+  
+  const handleCreateOrder = () => {
+    if (currentOrder.length === 0) {
+      toast.error("Please add items to the order");
+      return;
+    }
+    
+    if (!customerName) {
+      toast.error("Please enter customer name");
+      return;
+    }
+    
+    const newOrder: Order = {
+      id: `order-${Date.now()}`,
+      tableId: selectedTable.id,
+      tableNumber: selectedTable.number,
+      status: 'new',
+      customerName,
+      items: currentOrder,
+      createdAt: new Date(),
+      total: calculateTotal()
+    };
+    
+    onOrderCreate?.(selectedTable.id, newOrder);
+    handleStatusChange('occupied');
+    
+    toast.success("Order created successfully", {
+      description: `Table ${selectedTable.number} order placed`
+    });
+    
+    // Reset form
+    setCurrentOrder([]);
+    setCustomerName("");
+  };
+  
+  const handleUpdateOrder = () => {
+    if (!existingOrder || !onOrderUpdate) return;
+    
+    const updatedOrder = {
+      ...existingOrder,
+      items: currentOrder,
+      total: calculateTotal()
+    };
+    
+    onOrderUpdate(updatedOrder);
+    
+    toast.success("Order updated successfully", {
+      description: `Table ${selectedTable.number} order updated`
+    });
+  };
+  
+  const handleCompleteOrder = () => {
+    if (!existingOrder || !onOrderUpdate) return;
+    
+    // Mark all items as served
+    const updatedItems = currentOrder.map(item => ({
+      ...item,
+      status: 'served' as const
+    }));
+    
+    const updatedOrder = {
+      ...existingOrder,
+      items: updatedItems,
+      status: 'completed' as const
+    };
+    
+    onOrderUpdate(updatedOrder);
+    handleStatusChange('available');
+    
+    toast.success("Order completed", {
+      description: `Table ${selectedTable.number} order is now complete`
+    });
+    
+    // Auto close panel
+    onClose();
+  };
 
   return (
     <div className="fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 shadow-lg p-6 rounded-t-2xl animate-slide-up z-50">
       <div className="max-w-3xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold">Table {selectedTable.number}</h2>
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h2 className="text-xl font-semibold">Table {selectedTable.number}</h2>
+            <div className="flex items-center gap-2 mt-1">
+              <span className={`text-sm font-medium px-2 py-1 rounded-full
+                ${selectedTable.status === 'available' ? 'bg-green-100 text-green-800' : ''}
+                ${selectedTable.status === 'reserved' ? 'bg-red-100 text-red-800' : ''}
+                ${selectedTable.status === 'filled' ? 'bg-gray-100 text-gray-800' : ''}
+                ${selectedTable.status === 'occupied' ? 'bg-amber-100 text-amber-800' : ''}
+              `}>
+                {selectedTable.status.charAt(0).toUpperCase() + selectedTable.status.slice(1)}
+              </span>
+              <span className="text-sm text-gray-500">{selectedTable.capacity} seats</span>
+            </div>
+          </div>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="h-5 w-5" />
           </Button>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="space-y-4 lg:col-span-1">
-            <div className="bg-gray-50 p-4 rounded-lg space-y-3">
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-500">Status</span>
-                <span className={`text-sm font-medium
-                  ${selectedTable.status === 'available' ? 'text-green-700' : ''}
-                  ${selectedTable.status === 'reserved' ? 'text-red-700' : ''}
-                  ${selectedTable.status === 'filled' ? 'text-gray-700' : ''}
-                  ${selectedTable.status === 'occupied' ? 'text-amber-700' : ''}
-                `}>
-                  {selectedTable.status.charAt(0).toUpperCase() + selectedTable.status.slice(1)}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-500">Capacity</span>
-                <span className="text-sm font-medium">{selectedTable.capacity} seats</span>
-              </div>
-            </div>
-            
-            <div className="space-y-3">
-              <h3 className="text-sm font-medium">Change Status</h3>
-              <div className="grid grid-cols-2 gap-2">
-                <Button 
-                  variant="outline"
-                  className="bg-table-available text-green-800 hover:bg-table-available/80 border-none"
-                  onClick={() => handleStatusChange('available')}
-                >
-                  Available
-                </Button>
-                <Button 
-                  variant="outline"
-                  className="bg-table-reserved text-red-800 hover:bg-table-reserved/80 border-none"
-                  onClick={() => handleStatusChange('reserved')}
-                >
-                  Reserved
-                </Button>
-                <Button 
-                  variant="outline"
-                  className="bg-table-filled text-gray-800 hover:bg-table-filled/80 border-none"
-                  onClick={() => handleStatusChange('filled')}
-                >
-                  Filled
-                </Button>
-                <Button 
-                  variant="outline"
-                  className="bg-table-occupied text-amber-800 hover:bg-table-occupied/80 border-none"
-                  onClick={() => handleStatusChange('occupied')}
-                >
-                  Occupied
-                </Button>
-              </div>
-            </div>
-          </div>
+        <Tabs defaultValue={activeTab} className="w-full" onValueChange={setActiveTab}>
+          <TabsList className="grid grid-cols-3 mb-6">
+            <TabsTrigger value="status">
+              Table Status
+            </TabsTrigger>
+            <TabsTrigger value="order">
+              {existingOrder ? "View Order" : "Create Order"}
+            </TabsTrigger>
+            <TabsTrigger value="reservation">
+              Make Reservation
+            </TabsTrigger>
+          </TabsList>
           
-          <div className="lg:col-span-2 space-y-4">
-            <h3 className="text-sm font-medium">Make Reservation</h3>
-            
+          <TabsContent value="status" className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <Button 
+                variant="outline"
+                className="bg-table-available text-green-800 hover:bg-table-available/80 border-none"
+                onClick={() => handleStatusChange('available')}
+              >
+                Available
+              </Button>
+              <Button 
+                variant="outline"
+                className="bg-table-reserved text-red-800 hover:bg-table-reserved/80 border-none"
+                onClick={() => handleStatusChange('reserved')}
+              >
+                Reserved
+              </Button>
+              <Button 
+                variant="outline"
+                className="bg-table-filled text-gray-800 hover:bg-table-filled/80 border-none"
+                onClick={() => handleStatusChange('filled')}
+              >
+                Filled
+              </Button>
+              <Button 
+                variant="outline"
+                className="bg-table-occupied text-amber-800 hover:bg-table-occupied/80 border-none"
+                onClick={() => handleStatusChange('occupied')}
+              >
+                Occupied
+              </Button>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="order" className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input 
+                      placeholder="Search menu..." 
+                      className="pl-9"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="All Categories" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={undefined}><em>All Categories</em></SelectItem>
+                      <SelectItem value="Appetizers">Appetizers</SelectItem>
+                      <SelectItem value="Main Courses">Main Courses</SelectItem>
+                      <SelectItem value="Sides">Sides</SelectItem>
+                      <SelectItem value="Desserts">Desserts</SelectItem>
+                      <SelectItem value="Beverages">Beverages</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="max-h-[350px] overflow-y-auto pr-2">
+                  <MenuList 
+                    onAddToOrder={handleAddToOrder} 
+                    searchQuery={searchQuery}
+                    selectedCategory={selectedCategory}
+                  />
+                </div>
+              </div>
+              
+              <div className="w-full sm:w-[300px]">
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-medium flex items-center gap-2">
+                      <ShoppingCart className="h-4 w-4" />
+                      Current Order
+                    </h3>
+                    <Badge variant="outline">
+                      {currentOrder.reduce((total, item) => total + item.quantity, 0)} items
+                    </Badge>
+                  </div>
+                  
+                  {!existingOrder && (
+                    <div className="mb-3">
+                      <Label htmlFor="customer-name">Customer Name</Label>
+                      <Input 
+                        id="customer-name" 
+                        placeholder="Enter customer name"
+                        value={customerName}
+                        onChange={(e) => setCustomerName(e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                  )}
+                  
+                  <div className="mb-3 max-h-[200px] overflow-y-auto">
+                    {currentOrder.length === 0 ? (
+                      <div className="text-center text-gray-500 py-4">
+                        No items added yet
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {currentOrder.map(item => (
+                          <Card key={item.id} className="p-2 text-sm">
+                            <div className="flex justify-between">
+                              <div>
+                                <div className="font-medium">{item.name}</div>
+                                <div className="text-gray-500">
+                                  ${item.price.toFixed(2)} × {item.quantity}
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                ${(item.price * item.quantity).toFixed(2)}
+                              </div>
+                            </div>
+                            
+                            {existingOrder && (
+                              <div className="flex items-center justify-between mt-2 pt-2 border-t">
+                                <Select 
+                                  value={item.status} 
+                                  onValueChange={(val: 'pending' | 'cooking' | 'served') => 
+                                    handleUpdateItemStatus(item.id, val)
+                                  }
+                                >
+                                  <SelectTrigger className="h-7 text-xs">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="pending">Pending</SelectItem>
+                                    <SelectItem value="cooking">Cooking</SelectItem>
+                                    <SelectItem value="served">Served</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-7 text-xs"
+                                  onClick={() => handleRemoveItem(item.id)}
+                                >
+                                  Remove
+                                </Button>
+                              </div>
+                            )}
+                            
+                            {!existingOrder && (
+                              <div className="flex justify-end mt-2">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  className="h-7 text-xs"
+                                  onClick={() => handleRemoveItem(item.id)}
+                                >
+                                  Remove
+                                </Button>
+                              </div>
+                            )}
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <Separator className="my-3" />
+                  
+                  <div className="flex justify-between font-medium mb-4">
+                    <span>Total:</span>
+                    <span>${calculateTotal().toFixed(2)}</span>
+                  </div>
+                  
+                  {existingOrder ? (
+                    <div className="flex flex-col gap-2">
+                      <Button 
+                        variant="default"
+                        className="bg-app-purple hover:bg-app-purple/90 w-full"
+                        onClick={handleUpdateOrder}
+                        disabled={currentOrder.length === 0}
+                      >
+                        Update Order
+                      </Button>
+                      
+                      <Button 
+                        variant="default"
+                        className="bg-green-600 hover:bg-green-700 w-full"
+                        onClick={handleCompleteOrder}
+                        disabled={!currentOrder.every(item => item.status === 'served')}
+                      >
+                        <CheckCircle2 className="mr-2 h-4 w-4" />
+                        Complete Order
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button 
+                      variant="default"
+                      className="bg-app-purple hover:bg-app-purple/90 w-full"
+                      onClick={handleCreateOrder}
+                      disabled={currentOrder.length === 0 || !customerName}
+                    >
+                      <List className="mr-2 h-4 w-4" />
+                      Place Order
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="reservation" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="customer-name">Customer Name</Label>
@@ -228,8 +579,8 @@ export function TableActionPanel({
                 Create Reservation
               </Button>
             </div>
-          </div>
-        </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

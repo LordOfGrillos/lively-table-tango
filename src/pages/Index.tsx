@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { TableManager } from "@/components/tables/TableManager";
@@ -9,61 +9,66 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import { Order, OrderItem } from "@/components/tables/TableActionPanel";
 
 // Sample order data
-const fakeOrders = [
+const fakeOrders: Order[] = [
   {
     id: "order-1",
+    tableId: "t12",
     tableNumber: "12",
-    customer: "John Smith",
+    customerName: "John Smith",
     items: [
-      { name: "Grilled Salmon", quantity: 1, price: 24.99, status: "served" },
-      { name: "Caesar Salad", quantity: 1, price: 12.99, status: "served" },
-      { name: "Sparkling Water", quantity: 2, price: 4.99, status: "served" }
+      { id: "item-1", name: "Grilled Salmon", quantity: 1, price: 24.99, status: "served" },
+      { id: "item-2", name: "Caesar Salad", quantity: 1, price: 12.99, status: "served" },
+      { id: "item-3", name: "Sparkling Water", quantity: 2, price: 4.99, status: "served" }
     ],
     status: "completed",
-    time: "20 min ago",
+    createdAt: new Date(Date.now() - 20 * 60000), // 20 minutes ago
     total: 47.96
   },
   {
     id: "order-2",
+    tableId: "t13",
     tableNumber: "05",
-    customer: "Emma Johnson",
+    customerName: "Emma Johnson",
     items: [
-      { name: "Ribeye Steak", quantity: 1, price: 32.99, status: "cooking" },
-      { name: "Garlic Mashed Potatoes", quantity: 1, price: 8.99, status: "pending" },
-      { name: "Red Wine", quantity: 1, price: 12.99, status: "served" }
+      { id: "item-4", name: "Ribeye Steak", quantity: 1, price: 32.99, status: "cooking" },
+      { id: "item-5", name: "Garlic Mashed Potatoes", quantity: 1, price: 8.99, status: "pending" },
+      { id: "item-6", name: "Red Wine", quantity: 1, price: 12.99, status: "served" }
     ],
     status: "in-progress",
-    time: "12 min ago",
+    createdAt: new Date(Date.now() - 12 * 60000), // 12 minutes ago
     total: 54.97
   },
   {
     id: "order-3",
+    tableId: "t14",
     tableNumber: "08",
-    customer: "Maria Garcia",
+    customerName: "Maria Garcia",
     items: [
-      { name: "Spaghetti Carbonara", quantity: 1, price: 18.99, status: "pending" },
-      { name: "Garlic Bread", quantity: 1, price: 6.99, status: "pending" },
-      { name: "Tiramisu", quantity: 1, price: 9.99, status: "pending" },
-      { name: "Iced Tea", quantity: 2, price: 3.99, status: "pending" }
+      { id: "item-7", name: "Spaghetti Carbonara", quantity: 1, price: 18.99, status: "pending" },
+      { id: "item-8", name: "Garlic Bread", quantity: 1, price: 6.99, status: "pending" },
+      { id: "item-9", name: "Tiramisu", quantity: 1, price: 9.99, status: "pending" },
+      { id: "item-10", name: "Iced Tea", quantity: 2, price: 3.99, status: "pending" }
     ],
     status: "new",
-    time: "Just now",
+    createdAt: new Date(), // Just now
     total: 43.95
   },
   {
     id: "order-4",
+    tableId: "t15",
     tableNumber: "03",
-    customer: "Alex Chen",
+    customerName: "Alex Chen",
     items: [
-      { name: "Margherita Pizza", quantity: 1, price: 16.99, status: "cooking" },
-      { name: "Caprese Salad", quantity: 1, price: 11.99, status: "served" },
-      { name: "Cheesecake", quantity: 1, price: 8.99, status: "pending" },
-      { name: "Craft Beer", quantity: 2, price: 7.99, status: "served" }
+      { id: "item-11", name: "Margherita Pizza", quantity: 1, price: 16.99, status: "cooking" },
+      { id: "item-12", name: "Caprese Salad", quantity: 1, price: 11.99, status: "served" },
+      { id: "item-13", name: "Cheesecake", quantity: 1, price: 8.99, status: "pending" },
+      { id: "item-14", name: "Craft Beer", quantity: 2, price: 7.99, status: "served" }
     ],
     status: "in-progress",
-    time: "15 min ago",
+    createdAt: new Date(Date.now() - 15 * 60000), // 15 minutes ago
     total: 53.95
   }
 ];
@@ -72,6 +77,7 @@ export default function Index() {
   const [activeView, setActiveView] = useState<'tables' | 'order'>('tables');
   const [orderMode, setOrderMode] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
+  const [orders, setOrders] = useState<Order[]>(fakeOrders);
   
   const handleCreateNewOrder = () => {
     setOrderMode(true);
@@ -98,11 +104,69 @@ export default function Index() {
       default: return null;
     }
   };
+  
+  const formatTimeAgo = (date: Date) => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+    
+    if (diffMin < 1) return "Just now";
+    if (diffMin === 1) return "1 min ago";
+    if (diffMin < 60) return `${diffMin} mins ago`;
+    
+    const diffHours = Math.floor(diffMin / 60);
+    if (diffHours === 1) return "1 hour ago";
+    return `${diffHours} hours ago`;
+  };
 
   const handleCompleteOrder = (orderId: string) => {
+    setOrders(prevOrders => 
+      prevOrders.map(order => {
+        if (order.id === orderId) {
+          // Mark all items as served
+          const updatedItems = order.items.map(item => ({
+            ...item,
+            status: 'served' as const
+          }));
+          
+          return {
+            ...order,
+            items: updatedItems,
+            status: 'completed' as const
+          };
+        }
+        return order;
+      })
+    );
+    
+    const orderToComplete = orders.find(o => o.id === orderId);
+    
     toast.success("Order marked as completed", {
-      description: `Order for Table #${fakeOrders.find(o => o.id === orderId)?.tableNumber} has been completed`
+      description: `Order for Table #${orderToComplete?.tableNumber} has been completed`
     });
+  };
+  
+  const handleUpdateItemStatus = (orderId: string, itemId: string, newStatus: 'pending' | 'cooking' | 'served') => {
+    setOrders(prevOrders => 
+      prevOrders.map(order => {
+        if (order.id === orderId) {
+          // Update the specific item status
+          const updatedItems = order.items.map(item => 
+            item.id === itemId ? { ...item, status: newStatus } : item
+          );
+          
+          // Check if all items are served to update order status
+          const allServed = updatedItems.every(item => item.status === 'served');
+          
+          return {
+            ...order,
+            items: updatedItems,
+            status: allServed ? 'completed' : (order.status === 'new' ? 'in-progress' : order.status)
+          };
+        }
+        return order;
+      })
+    );
   };
   
   return (
@@ -195,7 +259,7 @@ export default function Index() {
                   
                   <TabsContent value="order" className="animate-fade-in outline-none">
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                      {fakeOrders.map(order => (
+                      {orders.map(order => (
                         <div 
                           key={order.id}
                           className={`bg-white rounded-lg border shadow-sm p-5 transition-all cursor-pointer hover:shadow-md ${selectedOrder === order.id ? 'ring-2 ring-app-purple' : ''}`}
@@ -209,9 +273,9 @@ export default function Index() {
                                   {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                                 </Badge>
                               </div>
-                              <p className="text-gray-500 text-sm mt-1">{order.customer}</p>
+                              <p className="text-gray-500 text-sm mt-1">{order.customerName}</p>
                             </div>
-                            <div className="text-sm text-gray-500">{order.time}</div>
+                            <div className="text-sm text-gray-500">{formatTimeAgo(order.createdAt)}</div>
                           </div>
                           
                           <Separator className="my-3" />
@@ -234,7 +298,30 @@ export default function Index() {
                           </div>
                           
                           {selectedOrder === order.id && (
-                            <div className="mt-4 pt-4 border-t">
+                            <div className="mt-4 pt-4 border-t space-y-3">
+                              {order.status !== 'completed' && (
+                                <div className="grid grid-cols-2 gap-2">
+                                  {order.items.map((item, idx) => (
+                                    <div key={idx} className="flex items-center justify-between text-xs">
+                                      <span className="truncate max-w-24">{item.name}</span>
+                                      <select
+                                        value={item.status}
+                                        onChange={(e) => handleUpdateItemStatus(
+                                          order.id, 
+                                          item.id, 
+                                          e.target.value as 'pending' | 'cooking' | 'served'
+                                        )}
+                                        className="ml-2 text-xs p-1 border rounded"
+                                      >
+                                        <option value="pending">Pending</option>
+                                        <option value="cooking">Cooking</option>
+                                        <option value="served">Served</option>
+                                      </select>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              
                               <Button 
                                 className="w-full bg-app-purple hover:bg-app-purple/90"
                                 onClick={() => handleCompleteOrder(order.id)}
