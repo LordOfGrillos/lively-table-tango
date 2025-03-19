@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -12,6 +11,7 @@ import { TableManager } from "@/components/tables/TableManager";
 import { MenuList } from "@/components/menu/MenuList";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import { useInventory } from "@/components/inventory/InventoryContext";
 
 interface OrderCreationProps {
   onCancel: () => void;
@@ -24,6 +24,8 @@ export function OrderCreation({ onCancel, onOrderCreate }: OrderCreationProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
   const [currentOrderItems, setCurrentOrderItems] = useState<OrderItem[]>([]);
+  
+  const inventory = useInventory && useInventory();
 
   const handleSelectTable = (tableId: string, tableNumber: string) => {
     setSelectedTable(tableId);
@@ -31,6 +33,37 @@ export function OrderCreation({ onCancel, onOrderCreate }: OrderCreationProps) {
   };
 
   const handleAddToOrder = (item: MenuItemType, quantity: number, customizations?: ItemCustomization) => {
+    if (inventory) {
+      const requiredIngredients = inventory.items.filter(inventoryItem => 
+        inventoryItem.usedInRecipes.some(recipe => recipe.menuItemName === item.name)
+      );
+      
+      const outOfStockIngredients = requiredIngredients.filter(ingredient => 
+        ingredient.status === "out-of-stock"
+      );
+      
+      if (outOfStockIngredients.length > 0) {
+        toast.error(`Cannot add ${item.name} to order`, {
+          description: `Missing ingredient: ${outOfStockIngredients[0].name} is out of stock`
+        });
+        return;
+      }
+      
+      const insufficientStockIngredients = requiredIngredients.filter(ingredient => {
+        const recipe = ingredient.usedInRecipes.find(r => r.menuItemName === item.name);
+        if (!recipe) return false;
+        
+        return ingredient.currentStock < (recipe.quantityUsed * quantity);
+      });
+      
+      if (insufficientStockIngredients.length > 0) {
+        toast.error(`Cannot add ${quantity}× ${item.name} to order`, {
+          description: `Insufficient stock of ${insufficientStockIngredients[0].name}`
+        });
+        return;
+      }
+    }
+    
     let itemPrice = item.price;
     
     if (customizations?.extras && customizations.extras.length > 0) {
@@ -101,6 +134,45 @@ export function OrderCreation({ onCancel, onOrderCreate }: OrderCreationProps) {
     if (currentOrderItems.length === 0) {
       toast.error("Please add items to the order");
       return;
+    }
+    
+    if (inventory) {
+      let canPlaceOrder = true;
+      
+      for (const orderItem of currentOrderItems) {
+        const requiredIngredients = inventory.items.filter(inventoryItem => 
+          inventoryItem.usedInRecipes.some(recipe => recipe.menuItemName === orderItem.name)
+        );
+        
+        const outOfStockIngredients = requiredIngredients.filter(ingredient => 
+          ingredient.status === "out-of-stock"
+        );
+        
+        if (outOfStockIngredients.length > 0) {
+          toast.error(`Cannot place order`, {
+            description: `${outOfStockIngredients[0].name} is now out of stock`
+          });
+          canPlaceOrder = false;
+          break;
+        }
+        
+        const insufficientStockIngredients = requiredIngredients.filter(ingredient => {
+          const recipe = ingredient.usedInRecipes.find(r => r.menuItemName === orderItem.name);
+          if (!recipe) return false;
+          
+          return ingredient.currentStock < (recipe.quantityUsed * orderItem.quantity);
+        });
+        
+        if (insufficientStockIngredients.length > 0) {
+          toast.error(`Cannot place order`, {
+            description: `Insufficient stock of ${insufficientStockIngredients[0].name}`
+          });
+          canPlaceOrder = false;
+          break;
+        }
+      }
+      
+      if (!canPlaceOrder) return;
     }
     
     const tableNumber = selectedTable.replace('table-', '');

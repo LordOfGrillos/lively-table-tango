@@ -1,6 +1,6 @@
 
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, Home, ShoppingCart, Users, Clock, FileText, Settings, LayoutGrid } from "lucide-react";
+import { ChevronDown, Home, ShoppingCart, Users, Clock, FileText, Settings, LayoutGrid, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -96,8 +96,16 @@ export function Sidebar() {
       </div>
 
       <div className="space-y-1 flex-1 overflow-y-auto mt-4">
-        <SidebarItem icon={Home} label="Dashboard" />
-        <SidebarItem icon={LayoutGrid} label="Table Management" active />
+        <SidebarItem 
+          icon={Home} 
+          label="Dashboard" 
+          onClick={() => navigate('/')}
+        />
+        <SidebarItem 
+          icon={LayoutGrid} 
+          label="Table Management"
+          onClick={() => navigate('/')}
+        />
         <SidebarItem 
           icon={ShoppingCart} 
           label="Cashier" 
@@ -111,6 +119,11 @@ export function Sidebar() {
             { label: "Order List" },
             { label: "Transaction Completed" }
           ]}
+        />
+        <SidebarItem 
+          icon={Package} 
+          label="Inventory" 
+          onClick={() => navigate('/inventory')}
         />
         <SidebarItem icon={Users} label="Master Data" hasSubmenu />
         <SidebarItem icon={Clock} label="Sales Transaction" />
