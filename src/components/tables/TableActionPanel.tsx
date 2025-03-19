@@ -160,7 +160,7 @@ export function TableActionPanel({
       {existingOrder && (
         <PaymentModal
           order={existingOrder}
-          isOpen={isPaymentModalOpen}
+          open={isPaymentModalOpen}
           onClose={() => setIsPaymentModalOpen(false)}
           onPaymentComplete={handlePaymentComplete}
         />

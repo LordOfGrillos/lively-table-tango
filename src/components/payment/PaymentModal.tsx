@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Order } from "@/components/tables/TableActionPanel";
 import { PaymentMethods } from "./PaymentMethods";
@@ -9,7 +10,6 @@ import { PaymentCashInput } from "./PaymentCashInput";
 import { PaymentCashChange } from "./PaymentCashChange";
 import { PaymentSplitBill } from "./PaymentSplitBill";
 import { usePaymentState } from "./usePaymentState";
-import { TipType } from "./hooks/useSplitBill";
 
 export type PaymentStatus = 
   "idle" | 
@@ -31,7 +31,7 @@ export interface SplitCustomer {
   name: string;
   items: { itemId: string; quantity: number }[];
   total: number;
-  tipType: TipType;
+  tipType: "percent" | "amount";
   tipValue: string;
   tipAmount: number;
 }
@@ -127,7 +127,10 @@ export function PaymentModal({ open, onClose, order, onPaymentComplete }: Paymen
         )}
 
         {paymentStatus === "success" && (
-          <PaymentSuccess />
+          <PaymentSuccess
+            tipAmount={tipAmount}
+            calculateTotalWithTip={calculateTotalWithTip}
+          />
         )}
 
         {paymentStatus === "cash-input" && (
@@ -138,13 +141,17 @@ export function PaymentModal({ open, onClose, order, onPaymentComplete }: Paymen
             cashReceived={cashReceived}
             setCashReceived={setCashReceived}
             handleCashAmountSubmit={handleCashAmountSubmit}
-            setPaymentStatus={setPaymentStatus}
+            setPaymentStatus={(status: PaymentStatus) => setPaymentStatus(status)}
           />
         )}
 
         {paymentStatus === "cash-change" && (
           <PaymentCashChange
+            order={order}
+            tipAmount={tipAmount}
+            cashReceived={cashReceived}
             changeAmount={changeAmount}
+            calculateTotalWithTip={calculateTotalWithTip}
             handleCashPaymentComplete={handleCashPaymentComplete}
           />
         )}
@@ -167,7 +174,7 @@ export function PaymentModal({ open, onClose, order, onPaymentComplete }: Paymen
             getRemainingAmount={getRemainingAmount}
             getCustomerTotalWithTip={getCustomerTotalWithTip}
             handleCompleteSplit={handleCompleteSplit}
-            setPaymentStatus={setPaymentStatus}
+            setPaymentStatus={(status: PaymentStatus) => setPaymentStatus(status)}
           />
         )}
       </DialogContent>

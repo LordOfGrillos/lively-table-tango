@@ -1,7 +1,7 @@
 
 import { CheckCircle } from "lucide-react";
 
-interface PaymentSuccessProps {
+export interface PaymentSuccessProps {
   tipAmount: number;
   calculateTotalWithTip: () => number;
 }

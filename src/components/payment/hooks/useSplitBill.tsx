@@ -1,272 +1,260 @@
+
 import { useState } from "react";
 import { Order } from "@/components/tables/TableActionPanel";
-import { SplitCustomer, PaymentStatus } from "../PaymentModal";
+import { SplitCustomer } from "../PaymentModal";
+import { PaymentStatus } from "../PaymentModal";
+import { nanoid } from "@/lib/utils";
 
-export type SplitType = "equal" | "custom";
 export type TipType = "percent" | "amount";
 
-export function useSplitBill(
-  order: Order,
-  calculateTotalWithTip: () => number,
-  setPaymentStatus: React.Dispatch<React.SetStateAction<PaymentStatus>>
-) {
-  const [splitType, setSplitType] = useState<SplitType>("equal");
-  const [numberOfCustomers, setNumberOfCustomers] = useState<number>(2);
-  const [customers, setCustomers] = useState<SplitCustomer[]>([
-    { id: "c1", name: "Customer 1", items: [], total: 0, tipType: "percent", tipValue: "", tipAmount: 0 },
-    { id: "c2", name: "Customer 2", items: [], total: 0, tipType: "percent", tipValue: "", tipAmount: 0 }
-  ]);
+export type SplitType = "equal" | "custom";
 
-  const handleSplitBill = () => {
-    // Initialize equal split
-    if (splitType === "equal") {
-      const equalAmount = calculateTotalWithTip() / numberOfCustomers;
-      const updatedCustomers = Array.from({ length: numberOfCustomers }, (_, i) => ({
-        id: `c${i+1}`,
-        name: `Customer ${i+1}`,
-        items: [],
-        total: parseFloat(equalAmount.toFixed(2)),
-        tipType: "percent" as TipType,
-        tipValue: "",
-        tipAmount: 0
-      }));
-      setCustomers(updatedCustomers);
-    } else {
-      // For custom split, start with empty assignments
-      const updatedCustomers = Array.from({ length: numberOfCustomers }, (_, i) => ({
-        id: `c${i+1}`,
-        name: `Customer ${i+1}`,
-        items: [],
-        total: 0,
-        tipType: "percent" as TipType,
-        tipValue: "",
-        tipAmount: 0
-      }));
-      setCustomers(updatedCustomers);
-    }
-    
-    setPaymentStatus("split-bill");
-  };
-  
-  // Functions for split bill
-  const handleAddCustomer = () => {
-    if (numberOfCustomers < 8) {
-      setNumberOfCustomers(prev => prev + 1);
-      const updatedCustomers = [
-        ...customers,
-        { 
-          id: `c${numberOfCustomers + 1}`, 
-          name: `Customer ${numberOfCustomers + 1}`, 
-          items: [], 
-          total: 0,
-          tipType: "percent",
-          tipValue: "",
-          tipAmount: 0
-        }
-      ];
-      setCustomers(updatedCustomers);
-      
-      // Recalculate totals for equal split
-      if (splitType === "equal") {
-        const equalAmount = order.total / (numberOfCustomers + 1);
-        setCustomers(updatedCustomers.map(c => ({ 
-          ...c, 
-          total: parseFloat(equalAmount.toFixed(2)) 
-        })));
-      }
-    }
-  };
-  
-  const handleRemoveCustomer = () => {
-    if (numberOfCustomers > 2) {
-      setNumberOfCustomers(prev => prev - 1);
-      const updatedCustomers = customers.slice(0, -1);
-      setCustomers(updatedCustomers);
-      
-      // Recalculate totals for equal split
-      if (splitType === "equal") {
-        const equalAmount = order.total / (numberOfCustomers - 1);
-        setCustomers(updatedCustomers.map(c => ({ 
-          ...c, 
-          total: parseFloat(equalAmount.toFixed(2)) 
-        })));
-      }
-    }
-  };
-  
+interface UseSplitBillProps {
+  order: Order;
+  calculateTotalWithTip: () => number;
+  setPaymentStatus: (status: PaymentStatus) => void;
+}
+
+export function useSplitBill(order: Order, calculateTotalWithTip: () => number, setPaymentStatus: (status: PaymentStatus) => void) {
+  const [splitType, setSplitType] = useState<SplitType>("equal");
+  const [numberOfCustomers, setNumberOfCustomers] = useState(2);
+  const [customers, setCustomers] = useState<SplitCustomer[]>(initialCustomers());
+
+  // Create initial customers
+  function initialCustomers(): SplitCustomer[] {
+    return Array.from({ length: 2 }, (_, i) => ({
+      id: `customer-${nanoid()}`,
+      name: `Customer ${i + 1}`,
+      items: [],
+      total: splitType === "equal" ? order.total / 2 : 0,
+      tipType: "percent" as TipType,
+      tipValue: "15",
+      tipAmount: splitType === "equal" ? (order.total / 2) * 0.15 : 0,
+    }));
+  }
+
   const handleSplitTypeChange = (type: SplitType) => {
     setSplitType(type);
-    
+
     if (type === "equal") {
+      // Update customers with equal amounts
       const equalAmount = order.total / numberOfCustomers;
-      setCustomers(customers.map(c => ({ 
-        ...c, 
-        items: [], 
-        total: parseFloat(equalAmount.toFixed(2)),
-        tipType: "percent",
-        tipValue: "",
-        tipAmount: 0 
-      })));
+      const updatedCustomers = customers.map(customer => ({
+        ...customer,
+        items: [],
+        total: equalAmount,
+        tipAmount: calculateTipAmount(equalAmount, customer.tipType, customer.tipValue)
+      }));
+      setCustomers(updatedCustomers);
     } else {
-      // Reset totals for custom split
-      setCustomers(customers.map(c => ({ 
-        ...c, 
-        items: [], 
+      // Reset item assignments for custom split
+      const resetCustomers = customers.map(customer => ({
+        ...customer,
+        items: [],
         total: 0,
-        tipType: "percent",
-        tipValue: "",
-        tipAmount: 0 
-      })));
+        tipAmount: 0
+      }));
+      setCustomers(resetCustomers);
     }
   };
-  
+
+  const handleAddCustomer = () => {
+    if (numberOfCustomers >= 8) return;
+    
+    setNumberOfCustomers(prev => prev + 1);
+    const newCustomer: SplitCustomer = {
+      id: `customer-${nanoid()}`,
+      name: `Customer ${numberOfCustomers + 1}`,
+      items: [],
+      total: splitType === "equal" ? order.total / (numberOfCustomers + 1) : 0,
+      tipType: "percent" as TipType,
+      tipValue: "15",
+      tipAmount: splitType === "equal" ? (order.total / (numberOfCustomers + 1)) * 0.15 : 0,
+    };
+    
+    if (splitType === "equal") {
+      // Recalculate equal amounts
+      const equalAmount = order.total / (numberOfCustomers + 1);
+      const updatedCustomers = customers.map(customer => ({
+        ...customer,
+        total: equalAmount,
+        tipAmount: calculateTipAmount(equalAmount, customer.tipType, customer.tipValue)
+      }));
+      setCustomers([...updatedCustomers, newCustomer]);
+    } else {
+      setCustomers(prev => [...prev, newCustomer]);
+    }
+  };
+
+  const handleRemoveCustomer = () => {
+    if (numberOfCustomers <= 2) return;
+    
+    setNumberOfCustomers(prev => prev - 1);
+    
+    if (splitType === "equal") {
+      // Recalculate equal amounts
+      const equalAmount = order.total / (numberOfCustomers - 1);
+      const updatedCustomers = customers.slice(0, -1).map(customer => ({
+        ...customer,
+        total: equalAmount,
+        tipAmount: calculateTipAmount(equalAmount, customer.tipType, customer.tipValue)
+      }));
+      setCustomers(updatedCustomers);
+    } else {
+      // Reassign items from removed customer
+      const customerToRemove = customers[customers.length - 1];
+      setCustomers(prev => prev.slice(0, -1));
+    }
+  };
+
+  const calculateTipAmount = (subtotal: number, tipType: TipType, tipValue: string): number => {
+    const value = parseFloat(tipValue) || 0;
+    
+    if (tipType === "percent") {
+      return subtotal * (value / 100);
+    } else {
+      return value;
+    }
+  };
+
   const handleAssignItemToCustomer = (itemId: string, customerId: string) => {
-    // Only for custom split
     if (splitType !== "custom") return;
     
-    const item = order.items.find(i => i.id === itemId);
-    if (!item) return;
+    // Get the item from the order
+    const orderItem = order.items.find(item => item.id === itemId);
+    if (!orderItem) return;
     
-    // Check if the item is already assigned to any customer
-    const isAssigned = customers.some(c => c.items.some(i => i.itemId === itemId));
+    // Check if item is already assigned to this customer
+    const customerHasItem = customers.find(c => 
+      c.id === customerId && c.items.some(i => i.itemId === itemId)
+    );
     
-    // Create new customer state
-    const updatedCustomers = customers.map(customer => {
-      if (customer.id === customerId) {
-        // If item already assigned to this customer, remove it
-        if (customer.items.some(i => i.itemId === itemId)) {
+    if (customerHasItem) {
+      // Remove item from this customer
+      const updatedCustomers = customers.map(customer => {
+        if (customer.id === customerId) {
+          const updatedItems = customer.items.filter(item => item.itemId !== itemId);
+          const updatedTotal = calculateCustomerTotal(updatedItems, order);
           return {
             ...customer,
-            items: customer.items.filter(i => i.itemId !== itemId),
-            total: parseFloat((customer.total - (item.price * item.quantity)).toFixed(2))
+            items: updatedItems,
+            total: updatedTotal,
+            tipAmount: calculateTipAmount(updatedTotal, customer.tipType, customer.tipValue)
           };
         }
-        // Otherwise, add it to this customer
-        return {
-          ...customer,
-          items: [...customer.items, { itemId, quantity: item.quantity }],
-          total: parseFloat((customer.total + (item.price * item.quantity)).toFixed(2))
-        };
+        return customer;
+      });
+      setCustomers(updatedCustomers);
+    } else {
+      // Remove item from any other customer first
+      const customersWithoutItem = customers.map(customer => {
+        if (customer.items.some(item => item.itemId === itemId)) {
+          const updatedItems = customer.items.filter(item => item.itemId !== itemId);
+          const updatedTotal = calculateCustomerTotal(updatedItems, order);
+          return {
+            ...customer,
+            items: updatedItems,
+            total: updatedTotal,
+            tipAmount: calculateTipAmount(updatedTotal, customer.tipType, customer.tipValue)
+          };
+        }
+        return customer;
+      });
+      
+      // Add item to selected customer
+      const updatedCustomers = customersWithoutItem.map(customer => {
+        if (customer.id === customerId) {
+          const updatedItems = [
+            ...customer.items,
+            { itemId, quantity: orderItem.quantity }
+          ];
+          const updatedTotal = calculateCustomerTotal(updatedItems, order);
+          return {
+            ...customer,
+            items: updatedItems,
+            total: updatedTotal,
+            tipAmount: calculateTipAmount(updatedTotal, customer.tipType, customer.tipValue)
+          };
+        }
+        return customer;
+      });
+      
+      setCustomers(updatedCustomers);
+    }
+  };
+
+  const calculateCustomerTotal = (items: { itemId: string; quantity: number }[], order: Order): number => {
+    return items.reduce((total, item) => {
+      const orderItem = order.items.find(i => i.id === item.itemId);
+      if (orderItem) {
+        return total + (orderItem.price * orderItem.quantity);
       }
-      // If item was previously assigned to another customer, remove it
-      else if (isAssigned && customer.items.some(i => i.itemId === itemId)) {
-        return {
-          ...customer,
-          items: customer.items.filter(i => i.itemId !== itemId),
-          total: parseFloat((customer.total - (item.price * item.quantity)).toFixed(2))
+      return total;
+    }, 0);
+  };
+
+  const handleSetCustomerName = (customerId: string, name: string) => {
+    const updatedCustomers = customers.map(customer => 
+      customer.id === customerId ? { ...customer, name } : customer
+    );
+    setCustomers(updatedCustomers);
+  };
+
+  const handleCustomerTipTypeChange = (customerId: string, tipType: TipType) => {
+    const updatedCustomers = customers.map(customer => {
+      if (customer.id === customerId) {
+        const tipAmount = calculateTipAmount(customer.total, tipType, customer.tipValue);
+        return { 
+          ...customer, 
+          tipType, 
+          tipAmount 
         };
       }
       return customer;
     });
-    
     setCustomers(updatedCustomers);
   };
-  
-  const handleSetCustomerName = (customerId: string, name: string) => {
-    setCustomers(customers.map(c => 
-      c.id === customerId ? { ...c, name } : c
-    ));
-  };
-  
-  // New functions for individual tip handling
-  const handleCustomerTipTypeChange = (customerId: string, tipType: TipType) => {
-    setCustomers(customers.map(customer => {
-      if (customer.id === customerId) {
-        // Calculate the new tip amount based on the type change
-        const tipAmount = calculateTipAmount(
-          tipType, 
-          customer.tipValue, 
-          customer.total
-        );
-        
-        return {
-          ...customer,
-          tipType,
-          tipAmount
-        };
-      }
-      return customer;
-    }));
-  };
-  
+
   const handleCustomerTipValueChange = (customerId: string, tipValue: string) => {
-    setCustomers(customers.map(customer => {
+    const updatedCustomers = customers.map(customer => {
       if (customer.id === customerId) {
-        // Calculate the new tip amount based on the value change
-        const tipAmount = calculateTipAmount(
-          customer.tipType, 
+        const tipAmount = calculateTipAmount(customer.total, customer.tipType, tipValue);
+        return { 
+          ...customer, 
           tipValue, 
-          customer.total
-        );
-        
-        return {
-          ...customer,
-          tipValue,
-          tipAmount
+          tipAmount 
         };
       }
       return customer;
-    }));
+    });
+    setCustomers(updatedCustomers);
   };
-  
-  // Helper function to calculate tip amount
-  const calculateTipAmount = (type: TipType, value: string, baseAmount: number): number => {
-    if (!value || isNaN(parseFloat(value))) return 0;
+
+  const isItemAssignedToCustomer = (itemId: string, customerId: string): boolean => {
+    const customer = customers.find(c => c.id === customerId);
+    return !!customer?.items.some(item => item.itemId === itemId);
+  };
+
+  const getRemainingAmount = (): number => {
+    if (splitType === "equal") return 0;
     
-    if (type === "percent") {
-      const percentage = parseFloat(value);
-      return parseFloat((percentage / 100 * baseAmount).toFixed(2));
-    } else {
-      return parseFloat(parseFloat(value).toFixed(2));
-    }
+    const assignedTotal = customers.reduce((sum, customer) => sum + customer.total, 0);
+    return parseFloat((order.total - assignedTotal).toFixed(2));
   };
-  
+
   const getCustomerTotalWithTip = (customerId: string): number => {
     const customer = customers.find(c => c.id === customerId);
     if (!customer) return 0;
     
-    return parseFloat((customer.total + customer.tipAmount).toFixed(2));
+    return customer.total + customer.tipAmount;
   };
-  
+
   const handleCompleteSplit = () => {
-    // Validate that all items are assigned in custom split
-    if (splitType === "custom") {
-      const allItemsAssigned = order.items.every(item => 
-        customers.some(c => c.items.some(i => i.itemId === item.id))
-      );
-      
-      if (!allItemsAssigned) {
-        // In a real app, you might show a warning here
-        console.warn("Not all items are assigned to customers");
-      }
-    }
-    
-    // Return to payment method selection
     setPaymentStatus("idle");
   };
-  
-  // Helper function to check if an item is assigned to a customer
-  const isItemAssignedToCustomer = (itemId: string, customerId: string) => {
-    return customers.find(c => c.id === customerId)?.items.some(i => i.itemId === itemId) || false;
-  };
-  
-  // Calculate total assigned in custom split
-  const calculateAssignedTotal = () => {
-    let total = 0;
-    customers.forEach(customer => {
-      customer.items.forEach(item => {
-        const orderItem = order.items.find(i => i.id === item.itemId);
-        if (orderItem) {
-          total += orderItem.price * orderItem.quantity;
-        }
-      });
-    });
-    return total;
-  };
-  
-  const getRemainingAmount = () => {
-    if (splitType === "equal") return 0;
-    return parseFloat((order.total - calculateAssignedTotal()).toFixed(2));
+
+  const handleSplitBill = () => {
+    setPaymentStatus("split-bill");
   };
 
   return {

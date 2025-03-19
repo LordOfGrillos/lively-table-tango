@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { ArrowRight, Wallet } from "lucide-react";
 import { Order } from "@/components/tables/TableActionPanel";
+import { PaymentStatus } from "./PaymentModal";
 
 interface PaymentCashInputProps {
   order: Order;
@@ -13,7 +14,7 @@ interface PaymentCashInputProps {
   setCashReceived: (amount: string) => void;
   calculateTotalWithTip: () => number;
   handleCashAmountSubmit: () => void;
-  setPaymentStatus: (status: string) => void;
+  setPaymentStatus: (status: PaymentStatus) => void;
 }
 
 export function PaymentCashInput({

@@ -4,7 +4,7 @@ import { DialogFooter } from "@/components/ui/dialog";
 import { Calculator, CheckCircle } from "lucide-react";
 import { Order } from "@/components/tables/TableActionPanel";
 
-interface PaymentCashChangeProps {
+export interface PaymentCashChangeProps {
   order: Order;
   tipAmount: number;
   cashReceived: string;
