@@ -69,7 +69,7 @@ export function PaymentSplitSummary({
                     className="bg-app-purple hover:bg-app-purple/90"
                   >
                     <CreditCard className="mr-2 h-4 w-4" />
-                    Pay
+                    Pay {customer.name}'s Bill
                   </Button>
                 )}
               </div>

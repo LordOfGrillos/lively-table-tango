@@ -1,4 +1,3 @@
-
 import React from "react";
 import { PaymentStatus, SplitCustomer, PaymentMethod } from "../PaymentModal";
 import { PaymentMethods } from "../PaymentMethods";
@@ -96,7 +95,6 @@ export function ModalContent({
   numberOfCustomers
 }: ModalContentProps) {
   
-  // Render customer info card when in customer-specific payment flows
   const renderCustomerInfo = () => {
     return (
       <CustomerInfo 
@@ -108,7 +106,6 @@ export function ModalContent({
     );
   };
 
-  // Render appropriate content based on payment status
   const renderContentByStatus = () => {
     switch (paymentStatus) {
       case "idle":
@@ -142,7 +139,7 @@ export function ModalContent({
           <PaymentSuccess
             tipAmount={tipAmount}
             calculateTotalWithTip={calculateTotalWithTip}
-            customerName={undefined}
+            customerName={paymentStatus.startsWith("customer") ? getCurrentCustomerName() : undefined}
           />
         );
       

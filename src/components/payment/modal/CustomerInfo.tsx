@@ -18,10 +18,10 @@ export function CustomerInfo({ paymentStatus, customerName, customerIndex, total
   }
 
   return (
-    <div className="mb-3 p-3 bg-muted/30 rounded-lg flex items-center">
+    <div className="mb-3 p-3 bg-app-purple/10 rounded-lg flex items-center border-2 border-app-purple">
       <User className="h-5 w-5 text-app-purple mr-2" />
       <div>
-        <p className="font-medium">{customerName}</p>
+        <p className="font-bold text-app-purple">{customerName}</p>
         <p className="text-xs text-muted-foreground">Customer {customerIndex + 1} of {totalCustomers}</p>
       </div>
     </div>
