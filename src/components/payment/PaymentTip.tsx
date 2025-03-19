@@ -1,10 +1,11 @@
 
-import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Percent, DollarSign, Split } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Order } from "@/components/tables/TableActionPanel";
+import { DollarSign, Percent, Users } from "lucide-react";
 
 interface PaymentTipProps {
   order: Order;
@@ -12,7 +13,7 @@ interface PaymentTipProps {
   tipValue: string;
   tipAmount: number;
   calculateTotalWithTip: () => number;
-  handleTipTypeChange: (value: string) => void;
+  handleTipTypeChange: (value: "percent" | "amount") => void;
   handleTipValueChange: (value: string) => void;
   handlePaymentSubmit: () => void;
   handleSplitBill: () => void;
@@ -30,107 +31,77 @@ export function PaymentTip({
   handleSplitBill
 }: PaymentTipProps) {
   return (
-    <div className="space-y-4 py-4">
-      <div className="border rounded-lg p-4 bg-muted/30">
-        <div className="flex justify-between mb-3">
-          <span className="text-sm font-medium">Order Total</span>
-          <span className="text-lg font-bold">${order.total.toFixed(2)}</span>
-        </div>
-        
-        {/* Tip Selection Section */}
-        <div className="mt-3 pt-3 border-t border-gray-200">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Tip</span>
-            <ToggleGroup type="single" value={tipType} onValueChange={handleTipTypeChange} className="border rounded-md">
-              <ToggleGroupItem value="percent" aria-label="Toggle percentage tip">
-                <Percent className="h-4 w-4" />
-              </ToggleGroupItem>
-              <ToggleGroupItem value="amount" aria-label="Toggle amount tip">
-                <DollarSign className="h-4 w-4" />
-              </ToggleGroupItem>
-            </ToggleGroup>
+    <div className="py-4 space-y-4">
+      <div className="space-y-2">
+        <Label className="text-base">Add Tip</Label>
+        <div className="flex flex-col space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            <RadioGroup
+              value={tipType}
+              onValueChange={(value) => handleTipTypeChange(value as "percent" | "amount")}
+              className="flex gap-4"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="percent" id="tip-percent" />
+                <Label htmlFor="tip-percent" className="flex items-center cursor-pointer">
+                  <Percent className="h-4 w-4 mr-1" /> Percentage
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="amount" id="tip-amount" />
+                <Label htmlFor="tip-amount" className="flex items-center cursor-pointer">
+                  <DollarSign className="h-4 w-4 mr-1" /> Amount
+                </Label>
+              </div>
+            </RadioGroup>
           </div>
           
-          <div className="flex gap-2 items-center">
-            <div className="relative flex-1">
-              {tipType === "percent" ? (
-                <div className="flex items-center">
-                  <Input
-                    type="number"
-                    value={tipValue}
-                    onChange={(e) => handleTipValueChange(e.target.value)}
-                    placeholder="0"
-                    className="pr-7"
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">%</span>
-                </div>
-              ) : (
-                <div className="flex items-center">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-                  <Input
-                    type="number"
-                    value={tipValue}
-                    onChange={(e) => handleTipValueChange(e.target.value)}
-                    placeholder="0.00"
-                    className="pl-7"
-                  />
-                </div>
-              )}
-            </div>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              className="whitespace-nowrap"
-              onClick={() => handleTipValueChange("15")}
-            >
-              15%
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="whitespace-nowrap"
-              onClick={() => handleTipValueChange("20")}
-            >
-              20%
-            </Button>
+          <div className="flex items-center space-x-2">
+            <Input
+              type="number"
+              value={tipValue}
+              onChange={(e) => handleTipValueChange(e.target.value)}
+              className="w-24"
+              min="0"
+              step={tipType === "percent" ? "1" : "0.01"}
+              placeholder={tipType === "percent" ? "15%" : "$5.00"}
+            />
+            <span className="text-sm text-muted-foreground">
+              {tipType === "percent" ? "% of total" : "fixed amount"}
+            </span>
           </div>
-          
-          {tipAmount > 0 && (
-            <div className="text-xs text-right mt-1 text-green-600">
-              Adding ${tipAmount.toFixed(2)} tip
-            </div>
-          )}
-        </div>
-        
-        <div className="flex justify-between mt-3 pt-3 border-t border-gray-200">
-          <span className="text-sm font-medium">Total with Tip</span>
-          <span className="text-lg font-bold">${calculateTotalWithTip().toFixed(2)}</span>
-        </div>
-        
-        {/* Split bill button */}
-        <div className="mt-3 pt-3 border-t border-gray-200">
-          <Button 
-            variant="outline" 
-            className="w-full flex items-center gap-2 border-dashed"
-            onClick={handleSplitBill}
-          >
-            <Split className="h-4 w-4" />
-            Split the Bill
-          </Button>
-        </div>
-        
-        <div className="text-xs text-muted-foreground mt-2">
-          Table #{order.tableNumber} • {order.items.length} items
         </div>
       </div>
       
-      <DialogFooter>
+      <div className="border-t pt-4">
+        <div className="flex justify-between text-sm mb-1">
+          <span>Subtotal:</span>
+          <span>${order.total.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between text-sm mb-1">
+          <span>Tip ({tipType === "percent" ? `${tipValue}%` : "fixed"}):</span>
+          <span>${tipAmount.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between font-medium">
+          <span>Total:</span>
+          <span>${calculateTotalWithTip().toFixed(2)}</span>
+        </div>
+      </div>
+      
+      <DialogFooter className="flex flex-col sm:flex-row gap-2">
         <Button 
-          className="bg-app-purple hover:bg-app-purple/90"
+          variant="outline" 
+          className="sm:w-full flex-1"
+          onClick={handleSplitBill}
+        >
+          <Users className="mr-2 h-4 w-4" />
+          Split Bill
+        </Button>
+        <Button 
+          className="sm:w-full flex-1 bg-app-purple hover:bg-app-purple/90"
           onClick={handlePaymentSubmit}
         >
-          Process Payment
+          Pay ${calculateTotalWithTip().toFixed(2)}
         </Button>
       </DialogFooter>
     </div>

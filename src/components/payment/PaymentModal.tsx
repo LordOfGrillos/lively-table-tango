@@ -9,6 +9,7 @@ import { PaymentSuccess } from "./PaymentSuccess";
 import { PaymentCashInput } from "./PaymentCashInput";
 import { PaymentCashChange } from "./PaymentCashChange";
 import { PaymentSplitBill } from "./PaymentSplitBill";
+import { PaymentSplitSummary } from "./PaymentSplitSummary";
 import { usePaymentState } from "./usePaymentState";
 
 export type PaymentStatus = 
@@ -17,7 +18,11 @@ export type PaymentStatus =
   "success" | 
   "cash-input" | 
   "cash-change" | 
-  "split-bill";
+  "split-bill" | 
+  "split-summary" | 
+  "customer-payment" | 
+  "customer-cash-input" | 
+  "customer-cash-change";
 
 export interface PaymentMethod {
   id: string;
@@ -58,13 +63,18 @@ export function PaymentModal({ open, onClose, order, onPaymentComplete }: Paymen
     splitType,
     numberOfCustomers,
     customers,
+    currentCustomerIndex,
+    customersPaid,
     paymentMethods,
     calculateTotalWithTip,
+    getCurrentCustomerTotal,
+    getCurrentCustomerTipAmount,
     handleTipValueChange,
     handleTipTypeChange,
     handlePaymentSubmit,
     handleSplitBill,
     handleCashAmountSubmit,
+    handleCustomerCashAmountSubmit,
     handleCashPaymentComplete,
     handleAddCustomer,
     handleRemoveCustomer,
@@ -74,16 +84,23 @@ export function PaymentModal({ open, onClose, order, onPaymentComplete }: Paymen
     handleCustomerTipTypeChange,
     handleCustomerTipValueChange,
     handleCompleteSplit,
+    handlePayCustomer,
+    handleCompleteAllPayments,
     isItemAssignedToCustomer,
     getRemainingAmount,
     getCustomerTotalWithTip,
   } = usePaymentState(order, onPaymentComplete);
 
-  // Handle modal close - only allow closing in idle state
+  // Handle modal close - only allow closing in idle state or success state
   const handleClose = () => {
     if (paymentStatus === "idle" || paymentStatus === "success") {
       onClose();
     }
+  };
+
+  // Get current customer name
+  const getCurrentCustomerName = () => {
+    return customers[currentCustomerIndex]?.name || "";
   };
 
   return (
@@ -97,6 +114,10 @@ export function PaymentModal({ open, onClose, order, onPaymentComplete }: Paymen
             {paymentStatus === "cash-input" && "Cash Payment"}
             {paymentStatus === "cash-change" && "Change Due"}
             {paymentStatus === "split-bill" && "Split Bill"}
+            {paymentStatus === "split-summary" && "Payment Summary"}
+            {paymentStatus === "customer-payment" && `${getCurrentCustomerName()}'s Payment`}
+            {paymentStatus === "customer-cash-input" && `${getCurrentCustomerName()}'s Cash Payment`}
+            {paymentStatus === "customer-cash-change" && `${getCurrentCustomerName()}'s Change Due`}
           </DialogTitle>
         </DialogHeader>
 
@@ -128,8 +149,13 @@ export function PaymentModal({ open, onClose, order, onPaymentComplete }: Paymen
 
         {paymentStatus === "success" && (
           <PaymentSuccess
-            tipAmount={tipAmount}
-            calculateTotalWithTip={calculateTotalWithTip}
+            tipAmount={paymentStatus === "customer-payment" 
+              ? getCurrentCustomerTipAmount() 
+              : tipAmount}
+            calculateTotalWithTip={paymentStatus === "customer-payment" 
+              ? getCurrentCustomerTotal 
+              : calculateTotalWithTip}
+            customerName={paymentStatus === "customer-payment" ? getCurrentCustomerName() : undefined}
           />
         )}
 
@@ -175,6 +201,89 @@ export function PaymentModal({ open, onClose, order, onPaymentComplete }: Paymen
             getCustomerTotalWithTip={getCustomerTotalWithTip}
             handleCompleteSplit={handleCompleteSplit}
             setPaymentStatus={(status: PaymentStatus) => setPaymentStatus(status)}
+          />
+        )}
+
+        {paymentStatus === "split-summary" && (
+          <PaymentSplitSummary
+            customers={customers}
+            currentCustomerIndex={currentCustomerIndex}
+            getCustomerTotalWithTip={getCustomerTotalWithTip}
+            handlePayCustomer={handlePayCustomer}
+            customersPaid={customersPaid}
+            handleComplete={handleCompleteAllPayments}
+            setPaymentStatus={(status: PaymentStatus) => setPaymentStatus(status)}
+          />
+        )}
+
+        {paymentStatus === "customer-payment" && (
+          <>
+            <PaymentMethods
+              paymentMethods={paymentMethods}
+              selectedPaymentMethod={selectedPaymentMethod}
+              setSelectedPaymentMethod={setSelectedPaymentMethod}
+            />
+            
+            <div className="py-4 space-y-4">
+              <div className="border-t pt-4">
+                <div className="flex justify-between text-sm mb-1">
+                  <span>Subtotal:</span>
+                  <span>${customers[currentCustomerIndex]?.total.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span>Tip:</span>
+                  <span>${customers[currentCustomerIndex]?.tipAmount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between font-medium">
+                  <span>Total:</span>
+                  <span>${getCustomerTotalWithTip(customers[currentCustomerIndex]?.id).toFixed(2)}</span>
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-2">
+                <button 
+                  className="bg-muted px-4 py-2 rounded-md text-sm font-medium"
+                  onClick={() => setPaymentStatus("split-summary")}
+                >
+                  Back
+                </button>
+                <button 
+                  className="bg-app-purple hover:bg-app-purple/90 text-white px-4 py-2 rounded-md text-sm font-medium"
+                  onClick={handlePaymentSubmit}
+                >
+                  Pay Now
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {paymentStatus === "customer-cash-input" && (
+          <PaymentCashInput
+            order={order}
+            tipAmount={customers[currentCustomerIndex]?.tipAmount || 0}
+            calculateTotalWithTip={() => getCustomerTotalWithTip(customers[currentCustomerIndex]?.id)}
+            cashReceived={cashReceived}
+            setCashReceived={setCashReceived}
+            handleCashAmountSubmit={handleCustomerCashAmountSubmit}
+            setPaymentStatus={(status: PaymentStatus) => {
+              if (status === "idle") {
+                setPaymentStatus("customer-payment");
+              } else {
+                setPaymentStatus(status as PaymentStatus);
+              }
+            }}
+          />
+        )}
+
+        {paymentStatus === "customer-cash-change" && (
+          <PaymentCashChange
+            order={order}
+            tipAmount={customers[currentCustomerIndex]?.tipAmount || 0}
+            cashReceived={cashReceived}
+            changeAmount={changeAmount}
+            calculateTotalWithTip={() => getCustomerTotalWithTip(customers[currentCustomerIndex]?.id)}
+            handleCashPaymentComplete={handleCashPaymentComplete}
           />
         )}
       </DialogContent>

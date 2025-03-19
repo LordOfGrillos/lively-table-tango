@@ -12,6 +12,7 @@ export function usePaymentState(order: Order, onPaymentComplete: (paymentMethod:
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("cash");
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("idle");
   const [currentCustomerIndex, setCurrentCustomerIndex] = useState(0);
+  const [customersPaid, setCustomersPaid] = useState<boolean[]>([]);
   
   // Use specialized hooks
   const { paymentMethods } = usePaymentMethods();
@@ -26,7 +27,7 @@ export function usePaymentState(order: Order, onPaymentComplete: (paymentMethod:
   } = useTipCalculation(order);
   
   const {
-    handlePaymentSubmit
+    handlePaymentSubmit: handleSinglePaymentSubmit
   } = usePayment(selectedPaymentMethod, onPaymentComplete, setPaymentStatus);
   
   const {
@@ -34,7 +35,7 @@ export function usePaymentState(order: Order, onPaymentComplete: (paymentMethod:
     setCashReceived,
     changeAmount,
     handleCashAmountSubmit,
-    handleCashPaymentComplete
+    handleCashPaymentComplete: handleSingleCashPaymentComplete
   } = useCashPayment(calculateTotalWithTip, setPaymentStatus, selectedPaymentMethod, onPaymentComplete);
   
   const {
@@ -55,6 +56,86 @@ export function usePaymentState(order: Order, onPaymentComplete: (paymentMethod:
     getCustomerTotalWithTip
   } = useSplitBill(order, calculateTotalWithTip, setPaymentStatus);
 
+  // Initialize customersPaid array when customers change
+  useState(() => {
+    if (customers.length > 0 && customersPaid.length !== customers.length) {
+      setCustomersPaid(Array(customers.length).fill(false));
+    }
+  });
+
+  // Handle paying for an individual customer
+  const handlePayCustomer = (index: number) => {
+    setCurrentCustomerIndex(index);
+    setPaymentStatus("customer-payment");
+  };
+
+  // Handle payment for current customer
+  const handlePaymentSubmit = () => {
+    if (paymentStatus === "customer-payment") {
+      if (selectedPaymentMethod === "cash") {
+        setPaymentStatus("customer-cash-input");
+      } else {
+        setPaymentStatus("processing");
+        
+        // Simulate payment processing for non-cash payments
+        setTimeout(() => {
+          setPaymentStatus("success");
+          
+          // After showing success message, mark customer as paid
+          setTimeout(() => {
+            const newCustomersPaid = [...customersPaid];
+            newCustomersPaid[currentCustomerIndex] = true;
+            setCustomersPaid(newCustomersPaid);
+            setPaymentStatus("split-summary");
+          }, 1500);
+        }, 2000);
+      }
+    } else {
+      handleSinglePaymentSubmit();
+    }
+  };
+
+  // Handle cash payment for current customer
+  const handleCashPaymentComplete = () => {
+    if (paymentStatus === "customer-cash-change") {
+      const newCustomersPaid = [...customersPaid];
+      newCustomersPaid[currentCustomerIndex] = true;
+      setCustomersPaid(newCustomersPaid);
+      setPaymentStatus("split-summary");
+    } else {
+      handleSingleCashPaymentComplete();
+    }
+  };
+
+  // Handle cash amount submit for current customer
+  const handleCustomerCashAmountSubmit = () => {
+    setPaymentStatus("customer-cash-change");
+  };
+
+  // Handle completion of all split payments
+  const handleCompleteAllPayments = () => {
+    if (customersPaid.every(paid => paid)) {
+      onPaymentComplete(selectedPaymentMethod);
+    }
+  };
+
+  // Get the total for current customer
+  const getCurrentCustomerTotal = (): number => {
+    if (customers.length > currentCustomerIndex) {
+      const customerId = customers[currentCustomerIndex].id;
+      return getCustomerTotalWithTip(customerId);
+    }
+    return 0;
+  };
+
+  // Get the tip amount for current customer
+  const getCurrentCustomerTipAmount = (): number => {
+    if (customers.length > currentCustomerIndex) {
+      return customers[currentCustomerIndex].tipAmount;
+    }
+    return 0;
+  };
+
   return {
     selectedPaymentMethod,
     setSelectedPaymentMethod,
@@ -70,13 +151,17 @@ export function usePaymentState(order: Order, onPaymentComplete: (paymentMethod:
     numberOfCustomers,
     customers,
     currentCustomerIndex,
+    customersPaid,
     paymentMethods,
     calculateTotalWithTip,
+    getCurrentCustomerTotal,
+    getCurrentCustomerTipAmount,
     handleTipValueChange,
     handleTipTypeChange,
     handlePaymentSubmit,
     handleSplitBill,
     handleCashAmountSubmit,
+    handleCustomerCashAmountSubmit,
     handleCashPaymentComplete,
     handleAddCustomer,
     handleRemoveCustomer,
@@ -86,6 +171,8 @@ export function usePaymentState(order: Order, onPaymentComplete: (paymentMethod:
     handleCustomerTipTypeChange,
     handleCustomerTipValueChange,
     handleCompleteSplit,
+    handlePayCustomer,
+    handleCompleteAllPayments,
     isItemAssignedToCustomer,
     getRemainingAmount,
     getCustomerTotalWithTip,

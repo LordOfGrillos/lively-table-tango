@@ -4,11 +4,13 @@ import { CheckCircle } from "lucide-react";
 export interface PaymentSuccessProps {
   tipAmount: number;
   calculateTotalWithTip: () => number;
+  customerName?: string;
 }
 
 export function PaymentSuccess({
   tipAmount,
-  calculateTotalWithTip
+  calculateTotalWithTip,
+  customerName
 }: PaymentSuccessProps) {
   return (
     <div className="py-8 flex flex-col items-center justify-center">
@@ -17,6 +19,7 @@ export function PaymentSuccess({
       </div>
       <h3 className="text-xl font-medium mb-2">Payment Completed!</h3>
       <p className="text-center text-muted-foreground mb-4">
+        {customerName && <span className="block mb-1 font-medium">{customerName}'s payment</span>}
         The payment for ${calculateTotalWithTip().toFixed(2)} has been successfully processed.
         {tipAmount > 0 && <span className="block mt-1">Including ${tipAmount.toFixed(2)} tip</span>}
       </p>

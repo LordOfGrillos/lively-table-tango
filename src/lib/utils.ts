@@ -7,5 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function nanoid(): string {
-  return Math.random().toString(36).substring(2, 10);
+  // A more robust implementation that creates a 9-character ID
+  return Math.random().toString(36).substring(2, 10) + 
+         Math.random().toString(36).substring(2, 6);
 }
