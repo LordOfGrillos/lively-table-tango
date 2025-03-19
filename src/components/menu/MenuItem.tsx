@@ -60,12 +60,13 @@ export function MenuItem({ item, onAddToOrder }: MenuItemProps) {
           <p className="text-sm font-medium mt-1">${item.price.toFixed(2)}</p>
         </div>
       </div>
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mt-3">
+      
+      <div className="flex items-center gap-2 mt-3">
         <div className="flex items-center border rounded-md">
           <Button 
             variant="ghost" 
             size="sm" 
-            className="p-0 w-8 h-8" 
+            className="h-8 w-8 p-0" 
             onClick={decreaseQuantity}
           >
             <Minus className="h-4 w-4" />
@@ -74,38 +75,38 @@ export function MenuItem({ item, onAddToOrder }: MenuItemProps) {
           <Button 
             variant="ghost" 
             size="sm" 
-            className="p-0 w-8 h-8" 
+            className="h-8 w-8 p-0" 
             onClick={increaseQuantity}
           >
             <Plus className="h-4 w-4" />
           </Button>
         </div>
-        <div className="flex gap-2 w-full sm:w-auto">
-          <Dialog open={isCustomizing} onOpenChange={setIsCustomizing}>
-            <DialogTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="flex items-center gap-1"
-              >
-                <Settings className="h-4 w-4" />
-                Customize
-              </Button>
-            </DialogTrigger>
-            <ItemCustomizationModal 
-              item={item} 
-              onAddToOrder={handleAddToOrder}
-              quantity={quantity}
-            />
-          </Dialog>
-          <Button 
-            size="sm" 
-            className="bg-app-purple hover:bg-app-purple/90 ml-auto sm:ml-0"
-            onClick={() => handleAddToOrder()}
-          >
-            Add to Order
-          </Button>
-        </div>
+        
+        <Dialog open={isCustomizing} onOpenChange={setIsCustomizing}>
+          <DialogTrigger asChild>
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="h-8"
+            >
+              <Settings className="h-4 w-4 mr-1" />
+              Customize
+            </Button>
+          </DialogTrigger>
+          <ItemCustomizationModal 
+            item={item} 
+            onAddToOrder={handleAddToOrder}
+            quantity={quantity}
+          />
+        </Dialog>
+        
+        <Button 
+          size="sm"
+          className="bg-app-purple hover:bg-app-purple/90 ml-auto h-8"
+          onClick={() => handleAddToOrder()}
+        >
+          Add to Order
+        </Button>
       </div>
     </Card>
   );
