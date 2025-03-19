@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +10,10 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { TableStatus } from "@/components/tables/TableShape";
-import { Calendar, Clock, Users, X, ShoppingCart, Search, List, CheckCircle2, AlertTriangle, Plus } from "lucide-react";
+import { 
+  Calendar, Clock, Users, X, ShoppingCart, Search, 
+  List, CheckCircle2, AlertTriangle, Plus, CreditCard 
+} from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MenuList } from "@/components/menu/MenuList";
@@ -19,6 +21,7 @@ import { MenuItemType, ItemCustomization, Extra } from "@/components/menu/MenuIt
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { PaymentModal } from "@/components/payment/PaymentModal";
 
 export interface OrderItem {
   id: string;
@@ -36,11 +39,13 @@ export interface Order {
   id: string;
   tableId: string;
   tableNumber: string;
-  status: 'new' | 'in-progress' | 'completed';
+  status: 'new' | 'in-progress' | 'completed' | 'paid';
   customerName?: string;
   items: OrderItem[];
   createdAt: Date;
   total: number;
+  paymentMethod?: string;
+  paymentDate?: Date;
 }
 
 type TableActionPanelProps = {
@@ -75,6 +80,7 @@ export function TableActionPanel({
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   
   const [currentOrder, setCurrentOrder] = useState<OrderItem[]>(
     existingOrder?.items.map(item => ({
@@ -264,6 +270,12 @@ export function TableActionPanel({
   const handleCompleteOrder = () => {
     if (!existingOrder || !onOrderUpdate) return;
     
+    setIsPaymentModalOpen(true);
+  };
+  
+  const handlePaymentComplete = (paymentMethod: string) => {
+    if (!existingOrder || !onOrderUpdate) return;
+    
     const updatedItems = currentOrder.map(item => ({
       ...item,
       status: 'served' as const
@@ -272,16 +284,19 @@ export function TableActionPanel({
     const updatedOrder = {
       ...existingOrder,
       items: updatedItems,
-      status: 'completed' as const
+      status: 'paid' as const,
+      paymentMethod,
+      paymentDate: new Date()
     };
     
     onOrderUpdate(updatedOrder);
     handleStatusChange('available');
     
-    toast.success("Order completed", {
-      description: `Table ${selectedTable.number} order is now complete`
+    toast.success(`Payment completed via ${paymentMethod}`, {
+      description: `Table ${selectedTable.number} has been freed up`
     });
     
+    setIsPaymentModalOpen(false);
     onClose();
   };
 
@@ -523,12 +538,12 @@ export function TableActionPanel({
                       
                       <Button 
                         variant="default"
-                        className="bg-green-600 hover:bg-green-700 w-full"
+                        className="bg-green-600 hover:bg-green-700 w-full flex items-center justify-center"
                         onClick={handleCompleteOrder}
                         disabled={!currentOrder.every(item => item.status === 'served')}
                       >
-                        <CheckCircle2 className="mr-2 h-4 w-4" />
-                        Complete Order
+                        <CreditCard className="mr-2 h-4 w-4" />
+                        Proceed to Payment
                       </Button>
                     </div>
                   ) : (
@@ -630,6 +645,15 @@ export function TableActionPanel({
           </TabsContent>
         </Tabs>
       </div>
+      
+      {existingOrder && (
+        <PaymentModal
+          order={existingOrder}
+          isOpen={isPaymentModalOpen}
+          onClose={() => setIsPaymentModalOpen(false)}
+          onPaymentComplete={handlePaymentComplete}
+        />
+      )}
     </div>
   );
 }

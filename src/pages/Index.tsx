@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { TableManager } from "@/components/tables/TableManager";
 import { Button } from "@/components/ui/button";
-import { Plus, ArrowLeft, Clock, Check, AlertCircle } from "lucide-react";
+import { Plus, ArrowLeft, Clock, Check, AlertCircle, CreditCard, Wallet, CircleDollarSign } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -23,9 +22,11 @@ const fakeOrders: Order[] = [
       { id: "item-2", name: "Caesar Salad", quantity: 1, price: 12.99, status: "served" },
       { id: "item-3", name: "Sparkling Water", quantity: 2, price: 4.99, status: "served" }
     ],
-    status: "completed",
+    status: "paid",
     createdAt: new Date(Date.now() - 20 * 60000), // 20 minutes ago
-    total: 47.96
+    total: 47.96,
+    paymentMethod: "card",
+    paymentDate: new Date(Date.now() - 5 * 60000) // 5 minutes ago
   },
   {
     id: "order-2",
@@ -92,6 +93,7 @@ export default function Index() {
       case "new": return "bg-blue-100 text-blue-800";
       case "in-progress": return "bg-amber-100 text-amber-800";
       case "completed": return "bg-green-100 text-green-800";
+      case "paid": return "bg-green-100 text-green-800";
       default: return "bg-gray-100 text-gray-800";
     }
   };
@@ -270,7 +272,7 @@ export default function Index() {
                               <div className="flex items-center gap-2">
                                 <h3 className="font-medium text-lg">Table #{order.tableNumber}</h3>
                                 <Badge className={getStatusColor(order.status)}>
-                                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                                  {order.status === 'paid' ? 'Paid' : order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                                 </Badge>
                               </div>
                               <p className="text-gray-500 text-sm mt-1">{order.customerName}</p>
@@ -297,9 +299,19 @@ export default function Index() {
                             <span>${order.total.toFixed(2)}</span>
                           </div>
                           
+                          {order.paymentMethod && (
+                            <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
+                              <span>Paid via:</span>
+                              <div className="flex items-center gap-1">
+                                {getPaymentMethodIcon(order.paymentMethod)}
+                                <span className="capitalize">{order.paymentMethod}</span>
+                              </div>
+                            </div>
+                          )}
+                          
                           {selectedOrder === order.id && (
                             <div className="mt-4 pt-4 border-t space-y-3">
-                              {order.status !== 'completed' && (
+                              {order.status !== 'paid' && order.status !== 'completed' && (
                                 <div className="grid grid-cols-2 gap-2">
                                   {order.items.map((item, idx) => (
                                     <div key={idx} className="flex items-center justify-between text-xs">
@@ -322,13 +334,15 @@ export default function Index() {
                                 </div>
                               )}
                               
-                              <Button 
-                                className="w-full bg-app-purple hover:bg-app-purple/90"
-                                onClick={() => handleCompleteOrder(order.id)}
-                                disabled={order.status === "completed"}
-                              >
-                                {order.status === "completed" ? "Completed" : "Mark as Completed"}
-                              </Button>
+                              {order.status !== 'paid' && (
+                                <Button 
+                                  className="w-full bg-app-purple hover:bg-app-purple/90"
+                                  onClick={() => handleCompleteOrder(order.id)}
+                                  disabled={order.status === "completed"}
+                                >
+                                  {order.status === "completed" ? "Completed" : "Mark as Completed"}
+                                </Button>
+                              )}
                             </div>
                           )}
                         </div>
