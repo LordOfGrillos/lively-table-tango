@@ -224,17 +224,12 @@ export function TableActionPanel({
       return;
     }
     
-    if (!customerName) {
-      toast.error("Please enter customer name");
-      return;
-    }
-    
     const newOrder: Order = {
       id: `order-${Date.now()}`,
       tableId: selectedTable.id,
       tableNumber: selectedTable.number,
       status: 'new',
-      customerName,
+      customerName: customerName || 'Guest',
       items: currentOrder,
       createdAt: new Date(),
       total: calculateTotal()
@@ -551,7 +546,7 @@ export function TableActionPanel({
                       variant="default"
                       className="bg-app-purple hover:bg-app-purple/90 w-full"
                       onClick={handleCreateOrder}
-                      disabled={currentOrder.length === 0 || !customerName}
+                      disabled={currentOrder.length === 0}
                     >
                       <List className="mr-2 h-4 w-4" />
                       Place Order

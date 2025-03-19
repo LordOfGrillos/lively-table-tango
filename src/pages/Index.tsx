@@ -228,11 +228,6 @@ export default function Index() {
       return;
     }
     
-    if (!customerName) {
-      toast.error("Please enter customer name");
-      return;
-    }
-    
     const tableNumber = selectedTable.replace('table-', '');
     
     const newOrder: Order = {
@@ -240,7 +235,7 @@ export default function Index() {
       tableId: selectedTable,
       tableNumber: tableNumber,
       status: 'new',
-      customerName,
+      customerName: customerName || 'Guest',
       items: currentOrderItems,
       createdAt: new Date(),
       total: calculateTotal()
@@ -249,7 +244,7 @@ export default function Index() {
     setOrders(prev => [...prev, newOrder]);
     
     toast.success("Order created successfully", {
-      description: `Order for ${customerName} at Table ${tableNumber} has been placed`
+      description: `Order for ${customerName || 'Guest'} at Table ${tableNumber} has been placed`
     });
     
     setOrderMode(false);
@@ -449,12 +444,6 @@ export default function Index() {
                       </div>
                     )}
                     
-                    {!customerName && (
-                      <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                        <p className="text-red-800">Please enter customer name</p>
-                      </div>
-                    )}
-                    
                     {currentOrderItems.length === 0 && (
                       <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
                         <p className="text-red-800">Please add items to the order</p>
@@ -512,7 +501,7 @@ export default function Index() {
                         variant="default"
                         className="bg-app-purple hover:bg-app-purple/90"
                         onClick={handlePlaceOrder}
-                        disabled={!selectedTable || !customerName || currentOrderItems.length === 0}
+                        disabled={!selectedTable || currentOrderItems.length === 0}
                       >
                         Place Order
                       </Button>
