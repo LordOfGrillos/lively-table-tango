@@ -19,7 +19,7 @@ export function ModalTitle({ paymentStatus, getCurrentCustomerName }: ModalTitle
       case "cash-change": return "Change Due";
       case "split-bill": return "Split Bill";
       case "split-summary": return "Payment Summary";
-      case "customer-payment": return `${getCurrentCustomerName()}'s Payment`;
+      case "customer-payment": return `Payment for ${getCurrentCustomerName()}`;
       case "customer-cash-input": return `${getCurrentCustomerName()}'s Cash Payment`;
       case "customer-cash-change": return `${getCurrentCustomerName()}'s Change Due`;
       default: return "Payment";

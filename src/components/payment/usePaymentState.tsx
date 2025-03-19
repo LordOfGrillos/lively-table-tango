@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Order } from "@/components/tables/TableActionPanel";
 import { PaymentStatus } from "./PaymentModal";
 import { usePaymentMethods } from "./hooks/usePaymentMethods";
@@ -54,11 +55,11 @@ export function usePaymentState(order: Order, onPaymentComplete: (paymentMethod:
     getCustomerTotalWithTip
   } = useSplitBill(order, calculateTotalWithTip, setPaymentStatus);
 
-  useState(() => {
+  useEffect(() => {
     if (customers.length > 0 && customersPaid.length !== customers.length) {
       setCustomersPaid(Array(customers.length).fill(false));
     }
-  });
+  }, [customers.length]);
 
   const getCurrentCustomerName = (): string => {
     if (customers.length > currentCustomerIndex) {

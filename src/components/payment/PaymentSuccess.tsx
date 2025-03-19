@@ -19,7 +19,11 @@ export function PaymentSuccess({
       </div>
       <h3 className="text-xl font-medium mb-2">Payment Completed!</h3>
       <p className="text-center text-muted-foreground mb-4">
-        {customerName && <span className="block mb-1 font-medium">{customerName}'s payment</span>}
+        {customerName && (
+          <span className="block mb-2 font-medium text-green-600 text-lg">
+            {customerName}'s payment
+          </span>
+        )}
         The payment for ${calculateTotalWithTip().toFixed(2)} has been successfully processed.
         {tipAmount > 0 && <span className="block mt-1">Including ${tipAmount.toFixed(2)} tip</span>}
       </p>

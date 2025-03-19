@@ -18,11 +18,13 @@ export function CustomerInfo({ paymentStatus, customerName, customerIndex, total
   }
 
   return (
-    <div className="mb-3 p-3 bg-app-purple/10 rounded-lg flex items-center border-2 border-app-purple">
-      <User className="h-5 w-5 text-app-purple mr-2" />
+    <div className="mb-4 p-4 bg-app-purple/15 rounded-lg flex items-center border-2 border-app-purple shadow-md">
+      <div className="bg-app-purple rounded-full p-2 mr-3">
+        <User className="h-5 w-5 text-white" />
+      </div>
       <div>
-        <p className="font-bold text-app-purple">{customerName}</p>
-        <p className="text-xs text-muted-foreground">Customer {customerIndex + 1} of {totalCustomers}</p>
+        <p className="font-bold text-app-purple text-lg">{customerName}</p>
+        <p className="text-sm text-muted-foreground">Customer {customerIndex + 1} of {totalCustomers}</p>
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+
 import React from "react";
 import { PaymentStatus, SplitCustomer, PaymentMethod } from "../PaymentModal";
 import { PaymentMethods } from "../PaymentMethods";
@@ -10,6 +11,7 @@ import { PaymentSplitBill } from "../PaymentSplitBill";
 import { PaymentSplitSummary } from "../PaymentSplitSummary";
 import { CustomerInfo } from "./CustomerInfo";
 import { Order } from "@/components/tables/TableActionPanel";
+import { Button } from "@/components/ui/button";
 
 interface ModalContentProps {
   paymentStatus: PaymentStatus;
@@ -106,6 +108,52 @@ export function ModalContent({
     );
   };
 
+  const renderCustomerPaymentSection = () => {
+    return (
+      <>
+        {renderCustomerInfo()}
+        
+        <PaymentMethods
+          paymentMethods={paymentMethods}
+          selectedPaymentMethod={selectedPaymentMethod}
+          setSelectedPaymentMethod={setSelectedPaymentMethod}
+        />
+        
+        <div className="py-4 space-y-4">
+          <div className="border-t pt-4">
+            <div className="flex justify-between text-sm mb-1">
+              <span>Subtotal:</span>
+              <span>${customers[currentCustomerIndex]?.total.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-sm mb-1">
+              <span>Tip:</span>
+              <span>${customers[currentCustomerIndex]?.tipAmount.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between font-medium">
+              <span>Total:</span>
+              <span>${getCustomerTotalWithTip(customers[currentCustomerIndex]?.id).toFixed(2)}</span>
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-2">
+            <Button 
+              variant="outline"
+              onClick={() => setPaymentStatus("split-summary")}
+            >
+              Back
+            </Button>
+            <Button 
+              className="bg-app-purple hover:bg-app-purple/90 text-white"
+              onClick={handlePaymentSubmit}
+            >
+              Pay {getCurrentCustomerName()}'s Bill
+            </Button>
+          </div>
+        </div>
+      </>
+    );
+  };
+
   const renderContentByStatus = () => {
     switch (paymentStatus) {
       case "idle":
@@ -144,49 +192,7 @@ export function ModalContent({
         );
       
       case "customer-payment":
-        return (
-          <>
-            {renderCustomerInfo()}
-            
-            <PaymentMethods
-              paymentMethods={paymentMethods}
-              selectedPaymentMethod={selectedPaymentMethod}
-              setSelectedPaymentMethod={setSelectedPaymentMethod}
-            />
-            
-            <div className="py-4 space-y-4">
-              <div className="border-t pt-4">
-                <div className="flex justify-between text-sm mb-1">
-                  <span>Subtotal:</span>
-                  <span>${customers[currentCustomerIndex]?.total.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>Tip:</span>
-                  <span>${customers[currentCustomerIndex]?.tipAmount.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between font-medium">
-                  <span>Total:</span>
-                  <span>${getCustomerTotalWithTip(customers[currentCustomerIndex]?.id).toFixed(2)}</span>
-                </div>
-              </div>
-              
-              <div className="flex justify-end gap-2">
-                <button 
-                  className="bg-muted px-4 py-2 rounded-md text-sm font-medium"
-                  onClick={() => setPaymentStatus("split-summary")}
-                >
-                  Back
-                </button>
-                <button 
-                  className="bg-app-purple hover:bg-app-purple/90 text-white px-4 py-2 rounded-md text-sm font-medium"
-                  onClick={handlePaymentSubmit}
-                >
-                  Pay Now
-                </button>
-              </div>
-            </div>
-          </>
-        );
+        return renderCustomerPaymentSection();
       
       case "cash-input":
         return (
