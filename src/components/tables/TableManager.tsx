@@ -15,6 +15,11 @@ type TableWithPosition = Omit<TableProps, 'onClick'> & {
   floorId?: string;
 };
 
+// Extend the props interface for TableManager
+interface TableManagerProps {
+  onTableSelect?: (tableId: string, tableNumber: string) => void;
+}
+
 // Mock data for tables with positions
 const generateInitialTables = (): TableWithPosition[] => {
   // Convert initial tables to include positions
@@ -48,7 +53,7 @@ const initialFloors: Floor[] = [
   { id: 'floor-bar', name: 'Bar Area' },
 ];
 
-export function TableManager() {
+export function TableManager({ onTableSelect }: TableManagerProps) {
   const [tables, setTables] = useState<TableWithPosition[]>(generateInitialTables());
   const [floors, setFloors] = useState<Floor[]>(initialFloors);
   const [currentFloor, setCurrentFloor] = useState<string>(floors[0].id);
@@ -88,6 +93,14 @@ export function TableManager() {
     // Don't select tables in edit mode
     if (!isEditMode) {
       setSelectedTable(tableId);
+      
+      // If onTableSelect is provided (when creating order), call it
+      if (onTableSelect) {
+        const table = tables.find(t => t.id === tableId);
+        if (table) {
+          onTableSelect(tableId, table.number);
+        }
+      }
     }
   };
   
@@ -258,7 +271,7 @@ export function TableManager() {
         </>
       )}
       
-      {selectedTable && !isEditMode && (
+      {selectedTable && !isEditMode && !onTableSelect && (
         <TableActionPanel
           selectedTable={selectedTableDetails as any}
           onClose={() => setSelectedTable(null)}
