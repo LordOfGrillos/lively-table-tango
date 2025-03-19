@@ -33,7 +33,8 @@ export function OrderSummary({
   onCompleteOrder,
   onCreateOrder
 }: OrderSummaryProps) {
-  const allItemsServed = currentOrder.every(item => item.status === 'served');
+  // Remove the condition that checks if all items are served
+  // This will allow the payment button to be clickable regardless of item status
 
   return (
     <div className="bg-gray-50 rounded-lg p-4">
@@ -101,7 +102,7 @@ export function OrderSummary({
             variant="default"
             className="bg-green-600 hover:bg-green-700 w-full flex items-center justify-center"
             onClick={onCompleteOrder}
-            disabled={!allItemsServed}
+            disabled={currentOrder.length === 0} // Changed from !allItemsServed to just check if there are items
           >
             <CreditCard className="mr-2 h-4 w-4" />
             Proceed to Payment
