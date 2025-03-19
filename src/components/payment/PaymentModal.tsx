@@ -70,6 +70,12 @@ export function PaymentModal({ order, isOpen, onClose, onPaymentComplete }: Paym
     setSelectedPaymentMethod,
   } = usePaymentState(order, onPaymentComplete);
 
+  // Create a wrapper function to handle type conversion
+  const handleSetPaymentStatus = (status: string) => {
+    // Type assertion to ensure status is a valid PaymentStatus
+    setPaymentStatus(status as "idle" | "processing" | "success" | "cash-input" | "cash-change" | "split-bill");
+  };
+
   const getDialogTitle = () => {
     switch (paymentStatus) {
       case "success":
@@ -130,7 +136,7 @@ export function PaymentModal({ order, isOpen, onClose, onPaymentComplete }: Paym
             isItemAssignedToCustomer={isItemAssignedToCustomer}
             getRemainingAmount={getRemainingAmount}
             handleCompleteSplit={handleCompleteSplit}
-            setPaymentStatus={setPaymentStatus}
+            setPaymentStatus={handleSetPaymentStatus}
           />
         )}
         
@@ -142,7 +148,7 @@ export function PaymentModal({ order, isOpen, onClose, onPaymentComplete }: Paym
             setCashReceived={setCashReceived}
             calculateTotalWithTip={calculateTotalWithTip}
             handleCashAmountSubmit={handleCashAmountSubmit}
-            setPaymentStatus={setPaymentStatus}
+            setPaymentStatus={handleSetPaymentStatus}
           />
         )}
         
