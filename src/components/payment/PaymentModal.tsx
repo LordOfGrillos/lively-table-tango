@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   Dialog,
@@ -13,9 +12,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { CreditCard, Wallet, CircleDollarSign, CheckCircle, Calculator, ArrowRight, Percent, DollarSign } from "lucide-react";
-import { Order } from "@/components/tables/TableActionPanel";
+import { CreditCard, Wallet, CircleDollarSign, CheckCircle, Calculator, ArrowRight, Percent, DollarSign, Split, Users, List, Equal, Plus, Minus, User } from "lucide-react";
+import { Order, OrderItem } from "@/components/tables/TableActionPanel";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
 interface PaymentModalProps {
   order: Order;
@@ -31,9 +32,19 @@ type PaymentMethod = {
   description: string;
 };
 
+type SplitCustomer = {
+  id: string;
+  name: string;
+  items: {
+    itemId: string;
+    quantity: number;
+  }[];
+  total: number;
+};
+
 export function PaymentModal({ order, isOpen, onClose, onPaymentComplete }: PaymentModalProps) {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("cash");
-  const [paymentStatus, setPaymentStatus] = useState<"idle" | "processing" | "success" | "cash-input" | "cash-change">("idle");
+  const [paymentStatus, setPaymentStatus] = useState<"idle" | "processing" | "success" | "cash-input" | "cash-change" | "split-bill">("idle");
   const [cashReceived, setCashReceived] = useState<string>("");
   const [changeAmount, setChangeAmount] = useState<number>(0);
   
@@ -41,6 +52,15 @@ export function PaymentModal({ order, isOpen, onClose, onPaymentComplete }: Paym
   const [tipType, setTipType] = useState<"percent" | "amount">("percent");
   const [tipValue, setTipValue] = useState<string>("");
   const [tipAmount, setTipAmount] = useState<number>(0);
+  
+  // Split bill state
+  const [splitType, setSplitType] = useState<"equal" | "custom">("equal");
+  const [numberOfCustomers, setNumberOfCustomers] = useState<number>(2);
+  const [customers, setCustomers] = useState<SplitCustomer[]>([
+    { id: "c1", name: "Customer 1", items: [], total: 0 },
+    { id: "c2", name: "Customer 2", items: [], total: 0 }
+  ]);
+  const [currentCustomerIndex, setCurrentCustomerIndex] = useState(0);
   
   const paymentMethods: PaymentMethod[] = [
     {
@@ -115,6 +135,31 @@ export function PaymentModal({ order, isOpen, onClose, onPaymentComplete }: Paym
     }
   };
   
+  const handleSplitBill = () => {
+    // Initialize equal split
+    if (splitType === "equal") {
+      const equalAmount = calculateTotalWithTip() / numberOfCustomers;
+      const updatedCustomers = Array.from({ length: numberOfCustomers }, (_, i) => ({
+        id: `c${i+1}`,
+        name: `Customer ${i+1}`,
+        items: [],
+        total: parseFloat(equalAmount.toFixed(2))
+      }));
+      setCustomers(updatedCustomers);
+    } else {
+      // For custom split, start with empty assignments
+      const updatedCustomers = Array.from({ length: numberOfCustomers }, (_, i) => ({
+        id: `c${i+1}`,
+        name: `Customer ${i+1}`,
+        items: [],
+        total: 0
+      }));
+      setCustomers(updatedCustomers);
+    }
+    
+    setPaymentStatus("split-bill");
+  };
+  
   const handleCashAmountSubmit = () => {
     const receivedAmount = parseFloat(cashReceived);
     const totalWithTip = calculateTotalWithTip();
@@ -137,17 +182,151 @@ export function PaymentModal({ order, isOpen, onClose, onPaymentComplete }: Paym
     }, 1500);
   };
   
+  // Functions for split bill
+  const handleAddCustomer = () => {
+    if (numberOfCustomers < 8) {
+      setNumberOfCustomers(prev => prev + 1);
+      const updatedCustomers = [
+        ...customers,
+        { id: `c${numberOfCustomers + 1}`, name: `Customer ${numberOfCustomers + 1}`, items: [], total: 0 }
+      ];
+      setCustomers(updatedCustomers);
+      
+      // Recalculate totals for equal split
+      if (splitType === "equal") {
+        const equalAmount = calculateTotalWithTip() / (numberOfCustomers + 1);
+        setCustomers(updatedCustomers.map(c => ({ ...c, total: parseFloat(equalAmount.toFixed(2)) })));
+      }
+    }
+  };
+  
+  const handleRemoveCustomer = () => {
+    if (numberOfCustomers > 2) {
+      setNumberOfCustomers(prev => prev - 1);
+      const updatedCustomers = customers.slice(0, -1);
+      setCustomers(updatedCustomers);
+      
+      // Recalculate totals for equal split
+      if (splitType === "equal") {
+        const equalAmount = calculateTotalWithTip() / (numberOfCustomers - 1);
+        setCustomers(updatedCustomers.map(c => ({ ...c, total: parseFloat(equalAmount.toFixed(2)) })));
+      }
+    }
+  };
+  
+  const handleSplitTypeChange = (type: "equal" | "custom") => {
+    setSplitType(type);
+    
+    if (type === "equal") {
+      const equalAmount = calculateTotalWithTip() / numberOfCustomers;
+      setCustomers(customers.map(c => ({ ...c, items: [], total: parseFloat(equalAmount.toFixed(2)) })));
+    } else {
+      // Reset totals for custom split
+      setCustomers(customers.map(c => ({ ...c, items: [], total: 0 })));
+    }
+  };
+  
+  const handleAssignItemToCustomer = (itemId: string, customerId: string) => {
+    // Only for custom split
+    if (splitType !== "custom") return;
+    
+    const item = order.items.find(i => i.id === itemId);
+    if (!item) return;
+    
+    // Check if the item is already assigned to any customer
+    const isAssigned = customers.some(c => c.items.some(i => i.itemId === itemId));
+    
+    // Create new customer state
+    const updatedCustomers = customers.map(customer => {
+      if (customer.id === customerId) {
+        // If item already assigned to this customer, remove it
+        if (customer.items.some(i => i.itemId === itemId)) {
+          return {
+            ...customer,
+            items: customer.items.filter(i => i.itemId !== itemId),
+            total: parseFloat((customer.total - (item.price * item.quantity)).toFixed(2))
+          };
+        }
+        // Otherwise, add it to this customer
+        return {
+          ...customer,
+          items: [...customer.items, { itemId, quantity: item.quantity }],
+          total: parseFloat((customer.total + (item.price * item.quantity)).toFixed(2))
+        };
+      }
+      // If item was previously assigned to another customer, remove it
+      else if (isAssigned && customer.items.some(i => i.itemId === itemId)) {
+        return {
+          ...customer,
+          items: customer.items.filter(i => i.itemId !== itemId),
+          total: parseFloat((customer.total - (item.price * item.quantity)).toFixed(2))
+        };
+      }
+      return customer;
+    });
+    
+    setCustomers(updatedCustomers);
+  };
+  
+  const handleSetCustomerName = (customerId: string, name: string) => {
+    setCustomers(customers.map(c => 
+      c.id === customerId ? { ...c, name } : c
+    ));
+  };
+  
+  const handleCompleteSplit = () => {
+    // Validate that all items are assigned in custom split
+    if (splitType === "custom") {
+      const allItemsAssigned = order.items.every(item => 
+        customers.some(c => c.items.some(i => i.itemId === item.id))
+      );
+      
+      if (!allItemsAssigned) {
+        // In a real app, you might show a warning here
+        console.warn("Not all items are assigned to customers");
+      }
+    }
+    
+    // Return to payment method selection
+    setPaymentStatus("idle");
+  };
+  
+  // Helper function to check if an item is assigned to a customer
+  const isItemAssignedToCustomer = (itemId: string, customerId: string) => {
+    return customers.find(c => c.id === customerId)?.items.some(i => i.itemId === itemId) || false;
+  };
+  
+  // Calculate total assigned in custom split
+  const calculateAssignedTotal = () => {
+    let total = 0;
+    customers.forEach(customer => {
+      customer.items.forEach(item => {
+        const orderItem = order.items.find(i => i.id === item.itemId);
+        if (orderItem) {
+          total += orderItem.price * orderItem.quantity;
+        }
+      });
+    });
+    return total;
+  };
+  
+  const getRemainingAmount = () => {
+    if (splitType === "equal") return 0;
+    return parseFloat((order.total - calculateAssignedTotal()).toFixed(2));
+  };
+  
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className={cn("sm:max-w-md", { "sm:max-w-3xl": paymentStatus === "split-bill" })}>
         <DialogHeader>
           <DialogTitle>
             {paymentStatus === "success" ? "Payment Successful" : 
              paymentStatus === "cash-input" ? "Enter Cash Amount" :
              paymentStatus === "cash-change" ? "Payment Change" :
+             paymentStatus === "split-bill" ? "Split Bill" :
              "Complete Payment"}
           </DialogTitle>
-          {paymentStatus !== "success" && paymentStatus !== "cash-input" && paymentStatus !== "cash-change" && (
+          {paymentStatus !== "success" && paymentStatus !== "cash-input" && paymentStatus !== "cash-change" && paymentStatus !== "split-bill" && (
             <DialogDescription>
               Complete the payment for order #{order.tableNumber}
             </DialogDescription>
@@ -234,6 +413,18 @@ export function PaymentModal({ order, isOpen, onClose, onPaymentComplete }: Paym
                   <span className="text-lg font-bold">${calculateTotalWithTip().toFixed(2)}</span>
                 </div>
                 
+                {/* Split bill button */}
+                <div className="mt-3 pt-3 border-t border-gray-200">
+                  <Button 
+                    variant="outline" 
+                    className="w-full flex items-center gap-2 border-dashed"
+                    onClick={handleSplitBill}
+                  >
+                    <Split className="h-4 w-4" />
+                    Split the Bill
+                  </Button>
+                </div>
+                
                 <div className="text-xs text-muted-foreground mt-2">
                   Table #{order.tableNumber} • {order.items.length} items
                 </div>
@@ -289,6 +480,172 @@ export function PaymentModal({ order, isOpen, onClose, onPaymentComplete }: Paym
               </Button>
             </DialogFooter>
           </>
+        )}
+        
+        {paymentStatus === "split-bill" && (
+          <div className="py-4 space-y-4">
+            <div className="flex flex-col space-y-2">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium">Split the Bill</h3>
+                <div className="flex items-center space-x-1">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={handleRemoveCustomer}
+                    disabled={numberOfCustomers <= 2}
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <span className="px-2">{numberOfCustomers}</span>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={handleAddCustomer}
+                    disabled={numberOfCustomers >= 8}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="flex gap-2">
+                <Button 
+                  variant={splitType === "equal" ? "default" : "outline"} 
+                  className={cn("flex-1", splitType === "equal" ? "bg-app-purple hover:bg-app-purple/90" : "")}
+                  onClick={() => handleSplitTypeChange("equal")}
+                >
+                  <Equal className="mr-2 h-4 w-4" />
+                  Split Equally
+                </Button>
+                <Button 
+                  variant={splitType === "custom" ? "default" : "outline"} 
+                  className={cn("flex-1", splitType === "custom" ? "bg-app-purple hover:bg-app-purple/90" : "")}
+                  onClick={() => handleSplitTypeChange("custom")}
+                >
+                  <List className="mr-2 h-4 w-4" />
+                  Split by Item
+                </Button>
+              </div>
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2 md:order-2">
+                <h4 className="font-medium">Customers</h4>
+                <div className="border rounded-lg bg-muted/20 divide-y">
+                  {customers.map((customer, index) => (
+                    <div key={customer.id} className="p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <Input 
+                          placeholder={`Customer ${index + 1}`}
+                          value={customer.name}
+                          onChange={(e) => handleSetCustomerName(customer.id, e.target.value)}
+                          className="h-8 text-sm"
+                        />
+                        <Badge variant="outline" className="ml-auto">
+                          ${customer.total.toFixed(2)}
+                        </Badge>
+                      </div>
+                      
+                      {splitType === "custom" && customer.items.length > 0 && (
+                        <div className="pl-6 text-sm text-muted-foreground space-y-1">
+                          {customer.items.map((item) => {
+                            const orderItem = order.items.find(i => i.id === item.itemId);
+                            return orderItem ? (
+                              <div key={item.itemId} className="flex justify-between">
+                                <span>{orderItem.name}</span>
+                                <span>${(orderItem.price * orderItem.quantity).toFixed(2)}</span>
+                              </div>
+                            ) : null;
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Summary information */}
+                <div className="border rounded-lg p-3 bg-muted/20 space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium">Total Bill with Tip</span>
+                    <span className="font-bold">${calculateTotalWithTip().toFixed(2)}</span>
+                  </div>
+                  
+                  {splitType === "custom" && (
+                    <div className="flex justify-between">
+                      <span className="text-sm font-medium">Assigned Amount</span>
+                      <span className="font-bold">${calculateAssignedTotal().toFixed(2)}</span>
+                    </div>
+                  )}
+                  
+                  {splitType === "custom" && getRemainingAmount() !== 0 && (
+                    <div className="flex justify-between text-orange-600">
+                      <span className="text-sm font-medium">Unassigned Amount</span>
+                      <span className="font-bold">${getRemainingAmount()}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {splitType === "custom" && (
+                <div className="space-y-2 md:order-1">
+                  <h4 className="font-medium">Order Items</h4>
+                  <div className="border rounded-lg divide-y max-h-[350px] overflow-y-auto">
+                    {order.items.map((item) => {
+                      const isAssigned = customers.some(c => c.items.some(i => i.itemId === item.id));
+                      return (
+                        <div key={item.id} className={cn(
+                          "p-3 transition-colors",
+                          isAssigned ? "bg-green-50" : ""
+                        )}>
+                          <div className="flex justify-between mb-1">
+                            <span className="font-medium">
+                              {item.quantity}× {item.name}
+                            </span>
+                            <span className="font-medium">${(item.price * item.quantity).toFixed(2)}</span>
+                          </div>
+                          
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {customers.map((customer) => (
+                              <Badge 
+                                key={`${item.id}-${customer.id}`}
+                                variant={isItemAssignedToCustomer(item.id, customer.id) ? "default" : "outline"}
+                                className={cn(
+                                  "cursor-pointer",
+                                  isItemAssignedToCustomer(item.id, customer.id) 
+                                    ? "bg-app-purple hover:bg-app-purple/90" 
+                                    : "hover:border-app-purple"
+                                )}
+                                onClick={() => handleAssignItemToCustomer(item.id, customer.id)}
+                              >
+                                {customer.name}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <DialogFooter className="pt-2">
+              <Button
+                variant="outline"
+                onClick={() => setPaymentStatus("idle")}
+              >
+                Back
+              </Button>
+              <Button 
+                className="bg-app-purple hover:bg-app-purple/90"
+                onClick={handleCompleteSplit}
+                disabled={splitType === "custom" && getRemainingAmount() !== 0}
+              >
+                Apply Split
+              </Button>
+            </DialogFooter>
+          </div>
         )}
         
         {paymentStatus === "cash-input" && (
