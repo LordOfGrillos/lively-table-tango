@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Order } from "@/components/tables/TableActionPanel";
 import { SplitCustomer } from "../../PaymentModal";
 import { nanoid } from "@/lib/utils";
@@ -8,16 +8,28 @@ import { TipType } from "../useSplitBill";
 interface UseCustomerManagementProps {
   order: Order;
   splitType: "equal" | "custom";
-  calculateTipAmount: (subtotal: number, tipType: TipType, tipValue: string) => number;
 }
 
 export function useCustomerManagement({ 
   order, 
-  splitType,
-  calculateTipAmount 
+  splitType
 }: UseCustomerManagementProps) {
   const [numberOfCustomers, setNumberOfCustomers] = useState(2);
-  const [customers, setCustomers] = useState<SplitCustomer[]>(initialCustomers());
+  const [customers, setCustomers] = useState<SplitCustomer[]>(() => initialCustomers());
+  
+  // Use a ref to store the tip calculator function that will be set later
+  const tipCalculatorRef = useRef<(subtotal: number, tipType: TipType, tipValue: string) => number>(
+    // Default implementation until real calculator is provided
+    (subtotal, tipType, tipValue) => {
+      const value = parseFloat(tipValue) || 0;
+      return tipType === "percent" ? subtotal * (value / 100) : value;
+    }
+  );
+
+  // Function to set the tip calculator from outside
+  const setTipCalculator = (calculator: (subtotal: number, tipType: TipType, tipValue: string) => number) => {
+    tipCalculatorRef.current = calculator;
+  };
 
   // Create initial customers
   function initialCustomers(): SplitCustomer[] {
@@ -52,7 +64,7 @@ export function useCustomerManagement({
       const updatedCustomers = customers.map(customer => ({
         ...customer,
         total: equalAmount,
-        tipAmount: calculateTipAmount(equalAmount, customer.tipType, customer.tipValue)
+        tipAmount: tipCalculatorRef.current(equalAmount, customer.tipType, customer.tipValue)
       }));
       setCustomers([...updatedCustomers, newCustomer]);
     } else {
@@ -71,7 +83,7 @@ export function useCustomerManagement({
       const updatedCustomers = customers.slice(0, -1).map(customer => ({
         ...customer,
         total: equalAmount,
-        tipAmount: calculateTipAmount(equalAmount, customer.tipType, customer.tipValue)
+        tipAmount: tipCalculatorRef.current(equalAmount, customer.tipType, customer.tipValue)
       }));
       setCustomers(updatedCustomers);
     } else {
@@ -90,7 +102,7 @@ export function useCustomerManagement({
   const handleCustomerTipTypeChange = (customerId: string, tipType: TipType) => {
     const updatedCustomers = customers.map(customer => {
       if (customer.id === customerId) {
-        const tipAmount = calculateTipAmount(customer.total, tipType, customer.tipValue);
+        const tipAmount = tipCalculatorRef.current(customer.total, tipType, customer.tipValue);
         return { 
           ...customer, 
           tipType, 
@@ -105,7 +117,7 @@ export function useCustomerManagement({
   const handleCustomerTipValueChange = (customerId: string, tipValue: string) => {
     const updatedCustomers = customers.map(customer => {
       if (customer.id === customerId) {
-        const tipAmount = calculateTipAmount(customer.total, customer.tipType, tipValue);
+        const tipAmount = tipCalculatorRef.current(customer.total, customer.tipType, tipValue);
         return { 
           ...customer, 
           tipValue, 
@@ -125,7 +137,7 @@ export function useCustomerManagement({
         ...customer,
         items: [],
         total: equalAmount,
-        tipAmount: calculateTipAmount(equalAmount, customer.tipType, customer.tipValue)
+        tipAmount: tipCalculatorRef.current(equalAmount, customer.tipType, customer.tipValue)
       }));
       setCustomers(updatedCustomers);
     } else {
@@ -149,6 +161,7 @@ export function useCustomerManagement({
     handleCustomerTipTypeChange,
     handleCustomerTipValueChange,
     setCustomers,
-    updateCustomersForSplitType
+    updateCustomersForSplitType,
+    setTipCalculator
   };
 }

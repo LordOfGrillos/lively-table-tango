@@ -22,26 +22,31 @@ export function useSplitBill(
   setPaymentStatus: (status: PaymentStatus) => void
 ) {
   const [splitType, setSplitType] = useState<SplitType>("equal");
-
-  // Initialize tip handling (must be first because others depend on it)
-  const tipHandling = useTipHandling({ customers });
   
-  // Initialize customer management
+  // Initialize customer management first
   const customerManagement = useCustomerManagement({
     order,
-    splitType,
-    calculateTipAmount: tipHandling.calculateTipAmount
+    splitType
   });
   
+  // Get customers from customer management
   const { customers } = customerManagement;
   
-  // Initialize item assignment
+  // Initialize tip handling with customers
+  const tipHandling = useTipHandling({ 
+    customers 
+  });
+  
+  // Then initialize item assignment with both customers and tip handling functions
   const itemAssignment = useItemAssignment({
     order,
     customers,
     setCustomers: customerManagement.setCustomers,
     calculateTipAmount: tipHandling.calculateTipAmount
   });
+
+  // Update the customer management hook to use tip handling
+  customerManagement.setTipCalculator(tipHandling.calculateTipAmount);
 
   const handleSplitTypeChange = (type: SplitType) => {
     setSplitType(type);
