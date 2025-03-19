@@ -4,12 +4,74 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { TableManager } from "@/components/tables/TableManager";
 import { Button } from "@/components/ui/button";
-import { Plus, ArrowLeft } from "lucide-react";
+import { Plus, ArrowLeft, Clock, Check, AlertCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
+
+// Sample order data
+const fakeOrders = [
+  {
+    id: "order-1",
+    tableNumber: "12",
+    customer: "John Smith",
+    items: [
+      { name: "Grilled Salmon", quantity: 1, price: 24.99, status: "served" },
+      { name: "Caesar Salad", quantity: 1, price: 12.99, status: "served" },
+      { name: "Sparkling Water", quantity: 2, price: 4.99, status: "served" }
+    ],
+    status: "completed",
+    time: "20 min ago",
+    total: 47.96
+  },
+  {
+    id: "order-2",
+    tableNumber: "05",
+    customer: "Emma Johnson",
+    items: [
+      { name: "Ribeye Steak", quantity: 1, price: 32.99, status: "cooking" },
+      { name: "Garlic Mashed Potatoes", quantity: 1, price: 8.99, status: "pending" },
+      { name: "Red Wine", quantity: 1, price: 12.99, status: "served" }
+    ],
+    status: "in-progress",
+    time: "12 min ago",
+    total: 54.97
+  },
+  {
+    id: "order-3",
+    tableNumber: "08",
+    customer: "Maria Garcia",
+    items: [
+      { name: "Spaghetti Carbonara", quantity: 1, price: 18.99, status: "pending" },
+      { name: "Garlic Bread", quantity: 1, price: 6.99, status: "pending" },
+      { name: "Tiramisu", quantity: 1, price: 9.99, status: "pending" },
+      { name: "Iced Tea", quantity: 2, price: 3.99, status: "pending" }
+    ],
+    status: "new",
+    time: "Just now",
+    total: 43.95
+  },
+  {
+    id: "order-4",
+    tableNumber: "03",
+    customer: "Alex Chen",
+    items: [
+      { name: "Margherita Pizza", quantity: 1, price: 16.99, status: "cooking" },
+      { name: "Caprese Salad", quantity: 1, price: 11.99, status: "served" },
+      { name: "Cheesecake", quantity: 1, price: 8.99, status: "pending" },
+      { name: "Craft Beer", quantity: 2, price: 7.99, status: "served" }
+    ],
+    status: "in-progress",
+    time: "15 min ago",
+    total: 53.95
+  }
+];
 
 export default function Index() {
   const [activeView, setActiveView] = useState<'tables' | 'order'>('tables');
   const [orderMode, setOrderMode] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
   
   const handleCreateNewOrder = () => {
     setOrderMode(true);
@@ -17,6 +79,30 @@ export default function Index() {
   
   const handleCancelOrder = () => {
     setOrderMode(false);
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "new": return "bg-blue-100 text-blue-800";
+      case "in-progress": return "bg-amber-100 text-amber-800";
+      case "completed": return "bg-green-100 text-green-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getItemStatusIcon = (status: string) => {
+    switch (status) {
+      case "served": return <Check className="h-4 w-4 text-green-600" />;
+      case "cooking": return <Clock className="h-4 w-4 text-amber-600" />;
+      case "pending": return <AlertCircle className="h-4 w-4 text-blue-600" />;
+      default: return null;
+    }
+  };
+
+  const handleCompleteOrder = (orderId: string) => {
+    toast.success("Order marked as completed", {
+      description: `Order for Table #${fakeOrders.find(o => o.id === orderId)?.tableNumber} has been completed`
+    });
   };
   
   return (
@@ -108,9 +194,58 @@ export default function Index() {
                   </TabsContent>
                   
                   <TabsContent value="order" className="animate-fade-in outline-none">
-                    <div className="bg-white p-8 rounded-lg border text-center">
-                      <h2 className="text-lg font-medium mb-2">Order View Coming Soon</h2>
-                      <p className="text-gray-500">This section will display active orders by table.</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                      {fakeOrders.map(order => (
+                        <div 
+                          key={order.id}
+                          className={`bg-white rounded-lg border shadow-sm p-5 transition-all cursor-pointer hover:shadow-md ${selectedOrder === order.id ? 'ring-2 ring-app-purple' : ''}`}
+                          onClick={() => setSelectedOrder(order.id === selectedOrder ? null : order.id)}
+                        >
+                          <div className="flex justify-between items-start mb-3">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-medium text-lg">Table #{order.tableNumber}</h3>
+                                <Badge className={getStatusColor(order.status)}>
+                                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                                </Badge>
+                              </div>
+                              <p className="text-gray-500 text-sm mt-1">{order.customer}</p>
+                            </div>
+                            <div className="text-sm text-gray-500">{order.time}</div>
+                          </div>
+                          
+                          <Separator className="my-3" />
+                          
+                          <div className="space-y-2 mb-4 max-h-40 overflow-y-auto">
+                            {order.items.map((item, idx) => (
+                              <div key={idx} className="flex items-center justify-between text-sm">
+                                <div className="flex items-center gap-2">
+                                  {getItemStatusIcon(item.status)}
+                                  <span>{item.quantity}× {item.name}</span>
+                                </div>
+                                <span>${item.price.toFixed(2)}</span>
+                              </div>
+                            ))}
+                          </div>
+                          
+                          <div className="flex items-center justify-between font-medium">
+                            <span>Total:</span>
+                            <span>${order.total.toFixed(2)}</span>
+                          </div>
+                          
+                          {selectedOrder === order.id && (
+                            <div className="mt-4 pt-4 border-t">
+                              <Button 
+                                className="w-full bg-app-purple hover:bg-app-purple/90"
+                                onClick={() => handleCompleteOrder(order.id)}
+                                disabled={order.status === "completed"}
+                              >
+                                {order.status === "completed" ? "Completed" : "Mark as Completed"}
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </TabsContent>
                 </Tabs>
