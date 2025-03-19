@@ -74,6 +74,18 @@ const fakeOrders: Order[] = [
   }
 ];
 
+// Function to get the payment method icon
+const getPaymentMethodIcon = (method: string) => {
+  switch (method) {
+    case "card":
+      return <CreditCard className="h-4 w-4" />;
+    case "cash":
+      return <Wallet className="h-4 w-4" />;
+    default:
+      return <CircleDollarSign className="h-4 w-4" />;
+  }
+};
+
 export default function Index() {
   const [activeView, setActiveView] = useState<'tables' | 'order'>('tables');
   const [orderMode, setOrderMode] = useState(false);
