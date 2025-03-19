@@ -15,18 +15,20 @@ interface TabProps {
   count?: number;
   onClick: () => void;
   isActive: boolean;
+  highlight?: boolean;
 }
 
-const Tab = ({ id, label, icon: Icon, count, onClick, isActive }: TabProps) => (
+const Tab = ({ id, label, icon: Icon, count, onClick, isActive, highlight }: TabProps) => (
   <button
     onClick={onClick}
     className={cn(
       "flex items-center justify-center md:justify-start gap-2 py-3 px-4 rounded-lg transition-colors",
       "hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-app-purple focus:ring-opacity-50",
-      isActive ? "bg-app-light-purple text-app-purple font-medium" : "text-gray-700"
+      isActive ? "bg-app-light-purple text-app-purple font-medium" : "text-gray-700",
+      highlight && !isActive ? "border-2 border-app-purple text-app-purple" : ""
     )}
   >
-    <Icon className="h-5 w-5" />
+    <Icon className={cn("h-5 w-5", highlight && !isActive ? "text-app-purple" : "")} />
     <span className="hidden md:inline">{label}</span>
     {count !== undefined && count > 0 && (
       <span className={cn(
@@ -49,7 +51,7 @@ export function InventoryTabs({ activeTab, setActiveTab }: InventoryTabsProps) {
     { id: "alerts", label: "Alerts", icon: AlertTriangle, count: unreadAlerts },
     { id: "orders", label: "Orders", icon: ShoppingBag },
     { id: "history", label: "History", icon: Clock },
-    { id: "add", label: "Add New", icon: PlusCircle },
+    { id: "add", label: "Add New", icon: PlusCircle, highlight: true },
   ];
 
   return (
@@ -64,6 +66,7 @@ export function InventoryTabs({ activeTab, setActiveTab }: InventoryTabsProps) {
               count={tab.count}
               onClick={() => setActiveTab(tab.id)}
               isActive={activeTab === tab.id}
+              highlight={tab.highlight}
             />
           </div>
         ))}

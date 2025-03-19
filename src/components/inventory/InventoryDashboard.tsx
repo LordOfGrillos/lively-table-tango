@@ -1,4 +1,3 @@
-
 import { AlertTriangle, TrendingDown, TrendingUp, Package, DollarSign, Clock } from "lucide-react";
 import { useInventory } from "./InventoryContext";
 import { Card } from "@/components/ui/card";
@@ -10,9 +9,15 @@ import { InventoryValueChart } from "./dashboard/InventoryValueChart";
 import { RecentTransactions } from "./dashboard/RecentTransactions";
 import { InventoryAlerts } from "./dashboard/InventoryAlerts";
 import { CategoryBreakdown } from "./dashboard/CategoryBreakdown";
+import { EmptyInventory } from "./EmptyInventory";
 
-export function InventoryDashboard() {
+export function InventoryDashboard({ onAddItem }: { onAddItem: () => void }) {
   const { items, alerts, transactions } = useInventory();
+  
+  // Show empty state if no items
+  if (items.length === 0) {
+    return <EmptyInventory onAddItem={onAddItem} />;
+  }
   
   // Calculate stats
   const totalItems = items.length;

@@ -1,12 +1,20 @@
+
 import { useState } from "react";
 import { Header } from "@/components/layout/Header";
 import { InventoryDashboard } from "@/components/inventory/InventoryDashboard";
 import { InventoryTabs } from "@/components/inventory/InventoryTabs";
 import { InventoryProvider } from "@/components/inventory/InventoryContext";
 import { InventoryAddItem } from "@/components/inventory/InventoryAddItem";
+import { PlusCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function Inventory() {
   const [activeTab, setActiveTab] = useState("dashboard");
+
+  // Function to switch to add item tab
+  const handleAddItem = () => {
+    setActiveTab("add");
+  };
 
   return (
     <InventoryProvider>
@@ -14,13 +22,22 @@ export default function Inventory() {
         <Header 
           title="Inventory Management" 
           subtitle="Track, manage, and optimize your inventory"
+          actionButton={
+            <Button 
+              onClick={handleAddItem}
+              className="bg-app-purple hover:bg-app-purple/90 shadow-md"
+            >
+              <PlusCircle className="mr-2 h-5 w-5" />
+              Add New Item
+            </Button>
+          }
         />
         
         <div className="flex-1 overflow-y-auto bg-gray-50 p-4 md:p-6">
           <InventoryTabs activeTab={activeTab} setActiveTab={setActiveTab} />
           
           <div className="mt-4">
-            {activeTab === "dashboard" && <InventoryDashboard />}
+            {activeTab === "dashboard" && <InventoryDashboard onAddItem={handleAddItem} />}
             {activeTab === "add" && <InventoryAddItem />}
             {/* Other tabs content will be rendered based on activeTab */}
           </div>
