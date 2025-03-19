@@ -47,9 +47,12 @@ export function usePaymentState(order: Order, onPaymentComplete: (paymentMethod:
     handleSplitTypeChange,
     handleAssignItemToCustomer,
     handleSetCustomerName,
+    handleCustomerTipTypeChange,
+    handleCustomerTipValueChange,
     handleCompleteSplit,
     isItemAssignedToCustomer,
-    getRemainingAmount
+    getRemainingAmount,
+    getCustomerTotalWithTip
   } = useSplitBill(order, calculateTotalWithTip, setPaymentStatus);
 
   return {
@@ -80,8 +83,11 @@ export function usePaymentState(order: Order, onPaymentComplete: (paymentMethod:
     handleSplitTypeChange,
     handleAssignItemToCustomer,
     handleSetCustomerName,
+    handleCustomerTipTypeChange,
+    handleCustomerTipValueChange,
     handleCompleteSplit,
     isItemAssignedToCustomer,
     getRemainingAmount,
+    getCustomerTotalWithTip,
   };
 }

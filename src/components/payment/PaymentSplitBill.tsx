@@ -3,10 +3,13 @@ import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { Order } from "@/components/tables/TableActionPanel";
 import { SplitCustomer } from "./PaymentModal";
 import { cn } from "@/lib/utils";
-import { Equal, List, Minus, Plus, User } from "lucide-react";
+import { Equal, List, Minus, Plus, User, Percent, DollarSign } from "lucide-react";
+import { TipType } from "./hooks/useSplitBill";
 
 interface PaymentSplitBillProps {
   order: Order;
@@ -19,8 +22,11 @@ interface PaymentSplitBillProps {
   handleRemoveCustomer: () => void;
   handleAssignItemToCustomer: (itemId: string, customerId: string) => void;
   handleSetCustomerName: (customerId: string, name: string) => void;
+  handleCustomerTipTypeChange: (customerId: string, tipType: TipType) => void;
+  handleCustomerTipValueChange: (customerId: string, tipValue: string) => void;
   isItemAssignedToCustomer: (itemId: string, customerId: string) => boolean;
   getRemainingAmount: () => number;
+  getCustomerTotalWithTip: (customerId: string) => number;
   handleCompleteSplit: () => void;
   setPaymentStatus: (status: string) => void;
 }
@@ -36,8 +42,11 @@ export function PaymentSplitBill({
   handleRemoveCustomer,
   handleAssignItemToCustomer,
   handleSetCustomerName,
+  handleCustomerTipTypeChange,
+  handleCustomerTipValueChange,
   isItemAssignedToCustomer,
   getRemainingAmount,
+  getCustomerTotalWithTip,
   handleCompleteSplit,
   setPaymentStatus
 }: PaymentSplitBillProps) {
@@ -117,7 +126,7 @@ export function PaymentSplitBill({
                     className="h-8 text-sm"
                   />
                   <Badge variant="outline" className="ml-auto">
-                    ${customer.total.toFixed(2)}
+                    ${getCustomerTotalWithTip(customer.id).toFixed(2)}
                   </Badge>
                 </div>
                 
@@ -134,6 +143,55 @@ export function PaymentSplitBill({
                     })}
                   </div>
                 )}
+                
+                {/* Individual Tip Section */}
+                <div className="mt-3 pt-3 border-t border-dashed space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Subtotal:</span>
+                    <span>${customer.total.toFixed(2)}</span>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Tip:</span>
+                      <span>${customer.tipAmount.toFixed(2)}</span>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                      <RadioGroup 
+                        value={customer.tipType} 
+                        onValueChange={(value) => handleCustomerTipTypeChange(customer.id, value as TipType)}
+                        className="flex gap-2"
+                      >
+                        <div className="flex items-center space-x-1">
+                          <RadioGroupItem value="percent" id={`percent-${customer.id}`} />
+                          <Label htmlFor={`percent-${customer.id}`} className="flex items-center text-xs">
+                            <Percent className="h-3 w-3 mr-1" /> %
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <RadioGroupItem value="amount" id={`amount-${customer.id}`} />
+                          <Label htmlFor={`amount-${customer.id}`} className="flex items-center text-xs">
+                            <DollarSign className="h-3 w-3 mr-1" /> $
+                          </Label>
+                        </div>
+                      </RadioGroup>
+                      
+                      <Input
+                        type="number"
+                        placeholder={customer.tipType === "percent" ? "20%" : "$5.00"}
+                        value={customer.tipValue}
+                        onChange={(e) => handleCustomerTipValueChange(customer.id, e.target.value)}
+                        className="h-7 text-xs"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between text-sm font-medium">
+                    <span>Total:</span>
+                    <span>${getCustomerTotalWithTip(customer.id).toFixed(2)}</span>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -141,8 +199,8 @@ export function PaymentSplitBill({
           {/* Summary information */}
           <div className="border rounded-lg p-3 bg-muted/20 space-y-2">
             <div className="flex justify-between">
-              <span className="text-sm font-medium">Total Bill with Tip</span>
-              <span className="font-bold">${calculateTotalWithTip().toFixed(2)}</span>
+              <span className="text-sm font-medium">Total Bill</span>
+              <span className="font-bold">${order.total.toFixed(2)}</span>
             </div>
             
             {splitType === "custom" && (
@@ -158,6 +216,15 @@ export function PaymentSplitBill({
                 <span className="font-bold">${getRemainingAmount()}</span>
               </div>
             )}
+            
+            {/* Total with all tips */}
+            <div className="flex justify-between pt-2 border-t">
+              <span className="text-sm font-medium">Total with Tips</span>
+              <span className="font-bold">
+                ${customers.reduce((sum, customer) => 
+                  sum + getCustomerTotalWithTip(customer.id), 0).toFixed(2)}
+              </span>
+            </div>
           </div>
         </div>
         

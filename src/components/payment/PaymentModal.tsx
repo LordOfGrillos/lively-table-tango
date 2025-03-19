@@ -1,129 +1,154 @@
-
-import { useState } from "react";
-import { 
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
+import React, { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Order } from "@/components/tables/TableActionPanel";
-import { PaymentMainView } from "./PaymentMainView";
-import { PaymentSplitBill } from "./PaymentSplitBill";
+import { PaymentMethods } from "./PaymentMethods";
+import { PaymentTip } from "./PaymentTip";
+import { PaymentProcessing } from "./PaymentProcessing";
+import { PaymentSuccess } from "./PaymentSuccess";
 import { PaymentCashInput } from "./PaymentCashInput";
 import { PaymentCashChange } from "./PaymentCashChange";
-import { PaymentSuccess } from "./PaymentSuccess";
-import { PaymentProcessing } from "./PaymentProcessing";
+import { PaymentSplitBill } from "./PaymentSplitBill";
 import { usePaymentState } from "./usePaymentState";
+import { TipType } from "./hooks/useSplitBill";
 
-export interface PaymentModalProps {
-  order: Order;
-  isOpen: boolean;
-  onClose: () => void;
-  onPaymentComplete: (paymentMethod: string) => void;
-}
+export type PaymentStatus = 
+  "idle" | 
+  "processing" | 
+  "success" | 
+  "cash-input" | 
+  "cash-change" | 
+  "split-bill";
 
-export type PaymentMethod = {
+export interface PaymentMethod {
   id: string;
   name: string;
   icon: React.ReactNode;
   description: string;
-};
+}
 
-export type SplitCustomer = {
+export interface SplitCustomer {
   id: string;
   name: string;
-  items: {
-    itemId: string;
-    quantity: number;
-  }[];
+  items: { itemId: string; quantity: number }[];
   total: number;
-};
+  tipType: TipType;
+  tipValue: string;
+  tipAmount: number;
+}
 
-// Define the PaymentStatus type so we can export it
-export type PaymentStatus = "idle" | "processing" | "success" | "cash-input" | "cash-change" | "split-bill";
+interface PaymentModalProps {
+  open: boolean;
+  onClose: () => void;
+  order: Order;
+  onPaymentComplete: (paymentMethod: string) => void;
+}
 
-export function PaymentModal({ order, isOpen, onClose, onPaymentComplete }: PaymentModalProps) {
+export function PaymentModal({ open, onClose, order, onPaymentComplete }: PaymentModalProps) {
   const {
-    paymentStatus,
     selectedPaymentMethod,
-    tipAmount,
+    setSelectedPaymentMethod,
+    paymentStatus,
+    setPaymentStatus,
     cashReceived,
+    setCashReceived,
     changeAmount,
-    customers,
+    tipType,
+    tipValue,
+    tipAmount,
     splitType,
     numberOfCustomers,
+    customers,
+    paymentMethods,
     calculateTotalWithTip,
-    setPaymentStatus,
-    handleSplitBill,
-    handlePaymentSubmit,
-    handleCashAmountSubmit,
-    handleCashPaymentComplete,
-    handleCompleteSplit,
     handleTipValueChange,
     handleTipTypeChange,
-    setCashReceived,
-    handleSplitTypeChange,
+    handlePaymentSubmit,
+    handleSplitBill,
+    handleCashAmountSubmit,
+    handleCashPaymentComplete,
     handleAddCustomer,
     handleRemoveCustomer,
+    handleSplitTypeChange,
     handleAssignItemToCustomer,
     handleSetCustomerName,
+    handleCustomerTipTypeChange,
+    handleCustomerTipValueChange,
+    handleCompleteSplit,
     isItemAssignedToCustomer,
     getRemainingAmount,
-    setSelectedPaymentMethod,
+    getCustomerTotalWithTip,
   } = usePaymentState(order, onPaymentComplete);
 
-  // Create a wrapper function to handle type conversion
-  const handleSetPaymentStatus = (status: string) => {
-    // Type assertion to ensure status is a valid PaymentStatus
-    setPaymentStatus(status as PaymentStatus);
-  };
-
-  const getDialogTitle = () => {
-    switch (paymentStatus) {
-      case "success":
-        return "Payment Successful";
-      case "cash-input":
-        return "Enter Cash Amount";
-      case "cash-change":
-        return "Payment Change";
-      case "split-bill":
-        return "Split Bill";
-      default:
-        return "Complete Payment";
+  // Handle modal close - only allow closing in idle state
+  const handleClose = () => {
+    if (paymentStatus === "idle" || paymentStatus === "success") {
+      onClose();
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className={cn("sm:max-w-md", { "sm:max-w-3xl": paymentStatus === "split-bill" })}>
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{getDialogTitle()}</DialogTitle>
-          {paymentStatus !== "success" && 
-           paymentStatus !== "cash-input" && 
-           paymentStatus !== "cash-change" && 
-           paymentStatus !== "split-bill" && (
-            <div className="text-sm text-muted-foreground">
-              Complete the payment for order #{order.tableNumber}
-            </div>
-          )}
+          <DialogTitle>
+            {paymentStatus === "idle" && "Payment"}
+            {paymentStatus === "processing" && "Processing Payment"}
+            {paymentStatus === "success" && "Payment Successful"}
+            {paymentStatus === "cash-input" && "Cash Payment"}
+            {paymentStatus === "cash-change" && "Change Due"}
+            {paymentStatus === "split-bill" && "Split Bill"}
+          </DialogTitle>
         </DialogHeader>
-        
+
         {paymentStatus === "idle" && (
-          <PaymentMainView 
+          <>
+            <PaymentMethods
+              paymentMethods={paymentMethods}
+              selectedPaymentMethod={selectedPaymentMethod}
+              setSelectedPaymentMethod={setSelectedPaymentMethod}
+            />
+            
+            <PaymentTip
+              order={order}
+              tipType={tipType}
+              tipValue={tipValue}
+              tipAmount={tipAmount}
+              calculateTotalWithTip={calculateTotalWithTip}
+              handleTipTypeChange={handleTipTypeChange}
+              handleTipValueChange={handleTipValueChange}
+              handlePaymentSubmit={handlePaymentSubmit}
+              handleSplitBill={handleSplitBill}
+            />
+          </>
+        )}
+
+        {paymentStatus === "processing" && (
+          <PaymentProcessing />
+        )}
+
+        {paymentStatus === "success" && (
+          <PaymentSuccess />
+        )}
+
+        {paymentStatus === "cash-input" && (
+          <PaymentCashInput
             order={order}
-            selectedPaymentMethod={selectedPaymentMethod}
-            setSelectedPaymentMethod={setSelectedPaymentMethod}
             tipAmount={tipAmount}
             calculateTotalWithTip={calculateTotalWithTip}
-            handleTipValueChange={handleTipValueChange}
-            handleTipTypeChange={handleTipTypeChange}
-            handleSplitBill={handleSplitBill}
-            handlePaymentSubmit={handlePaymentSubmit}
-            onClose={onClose}
+            cashReceived={cashReceived}
+            setCashReceived={setCashReceived}
+            handleCashAmountSubmit={handleCashAmountSubmit}
+            setPaymentStatus={setPaymentStatus}
           />
         )}
-        
+
+        {paymentStatus === "cash-change" && (
+          <PaymentCashChange
+            changeAmount={changeAmount}
+            handleCashPaymentComplete={handleCashPaymentComplete}
+          />
+        )}
+
         {paymentStatus === "split-bill" && (
           <PaymentSplitBill
             order={order}
@@ -136,42 +161,13 @@ export function PaymentModal({ order, isOpen, onClose, onPaymentComplete }: Paym
             handleRemoveCustomer={handleRemoveCustomer}
             handleAssignItemToCustomer={handleAssignItemToCustomer}
             handleSetCustomerName={handleSetCustomerName}
+            handleCustomerTipTypeChange={handleCustomerTipTypeChange}
+            handleCustomerTipValueChange={handleCustomerTipValueChange}
             isItemAssignedToCustomer={isItemAssignedToCustomer}
             getRemainingAmount={getRemainingAmount}
+            getCustomerTotalWithTip={getCustomerTotalWithTip}
             handleCompleteSplit={handleCompleteSplit}
-            setPaymentStatus={handleSetPaymentStatus}
-          />
-        )}
-        
-        {paymentStatus === "cash-input" && (
-          <PaymentCashInput 
-            order={order}
-            tipAmount={tipAmount}
-            cashReceived={cashReceived}
-            setCashReceived={setCashReceived}
-            calculateTotalWithTip={calculateTotalWithTip}
-            handleCashAmountSubmit={handleCashAmountSubmit}
-            setPaymentStatus={handleSetPaymentStatus}
-          />
-        )}
-        
-        {paymentStatus === "cash-change" && (
-          <PaymentCashChange 
-            order={order}
-            tipAmount={tipAmount}
-            cashReceived={cashReceived}
-            changeAmount={changeAmount}
-            calculateTotalWithTip={calculateTotalWithTip}
-            handleCashPaymentComplete={handleCashPaymentComplete}
-          />
-        )}
-        
-        {paymentStatus === "processing" && <PaymentProcessing />}
-        
-        {paymentStatus === "success" && (
-          <PaymentSuccess 
-            tipAmount={tipAmount}
-            calculateTotalWithTip={calculateTotalWithTip}
+            setPaymentStatus={setPaymentStatus}
           />
         )}
       </DialogContent>

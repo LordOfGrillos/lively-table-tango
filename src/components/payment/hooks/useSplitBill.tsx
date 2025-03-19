@@ -3,6 +3,7 @@ import { Order } from "@/components/tables/TableActionPanel";
 import { SplitCustomer, PaymentStatus } from "../PaymentModal";
 
 export type SplitType = "equal" | "custom";
+export type TipType = "percent" | "amount";
 
 export function useSplitBill(
   order: Order,
@@ -12,8 +13,8 @@ export function useSplitBill(
   const [splitType, setSplitType] = useState<SplitType>("equal");
   const [numberOfCustomers, setNumberOfCustomers] = useState<number>(2);
   const [customers, setCustomers] = useState<SplitCustomer[]>([
-    { id: "c1", name: "Customer 1", items: [], total: 0 },
-    { id: "c2", name: "Customer 2", items: [], total: 0 }
+    { id: "c1", name: "Customer 1", items: [], total: 0, tipType: "percent", tipValue: "", tipAmount: 0 },
+    { id: "c2", name: "Customer 2", items: [], total: 0, tipType: "percent", tipValue: "", tipAmount: 0 }
   ]);
 
   const handleSplitBill = () => {
@@ -24,7 +25,10 @@ export function useSplitBill(
         id: `c${i+1}`,
         name: `Customer ${i+1}`,
         items: [],
-        total: parseFloat(equalAmount.toFixed(2))
+        total: parseFloat(equalAmount.toFixed(2)),
+        tipType: "percent" as TipType,
+        tipValue: "",
+        tipAmount: 0
       }));
       setCustomers(updatedCustomers);
     } else {
@@ -33,7 +37,10 @@ export function useSplitBill(
         id: `c${i+1}`,
         name: `Customer ${i+1}`,
         items: [],
-        total: 0
+        total: 0,
+        tipType: "percent" as TipType,
+        tipValue: "",
+        tipAmount: 0
       }));
       setCustomers(updatedCustomers);
     }
@@ -47,14 +54,25 @@ export function useSplitBill(
       setNumberOfCustomers(prev => prev + 1);
       const updatedCustomers = [
         ...customers,
-        { id: `c${numberOfCustomers + 1}`, name: `Customer ${numberOfCustomers + 1}`, items: [], total: 0 }
+        { 
+          id: `c${numberOfCustomers + 1}`, 
+          name: `Customer ${numberOfCustomers + 1}`, 
+          items: [], 
+          total: 0,
+          tipType: "percent",
+          tipValue: "",
+          tipAmount: 0
+        }
       ];
       setCustomers(updatedCustomers);
       
       // Recalculate totals for equal split
       if (splitType === "equal") {
-        const equalAmount = calculateTotalWithTip() / (numberOfCustomers + 1);
-        setCustomers(updatedCustomers.map(c => ({ ...c, total: parseFloat(equalAmount.toFixed(2)) })));
+        const equalAmount = order.total / (numberOfCustomers + 1);
+        setCustomers(updatedCustomers.map(c => ({ 
+          ...c, 
+          total: parseFloat(equalAmount.toFixed(2)) 
+        })));
       }
     }
   };
@@ -67,8 +85,11 @@ export function useSplitBill(
       
       // Recalculate totals for equal split
       if (splitType === "equal") {
-        const equalAmount = calculateTotalWithTip() / (numberOfCustomers - 1);
-        setCustomers(updatedCustomers.map(c => ({ ...c, total: parseFloat(equalAmount.toFixed(2)) })));
+        const equalAmount = order.total / (numberOfCustomers - 1);
+        setCustomers(updatedCustomers.map(c => ({ 
+          ...c, 
+          total: parseFloat(equalAmount.toFixed(2)) 
+        })));
       }
     }
   };
@@ -77,11 +98,25 @@ export function useSplitBill(
     setSplitType(type);
     
     if (type === "equal") {
-      const equalAmount = calculateTotalWithTip() / numberOfCustomers;
-      setCustomers(customers.map(c => ({ ...c, items: [], total: parseFloat(equalAmount.toFixed(2)) })));
+      const equalAmount = order.total / numberOfCustomers;
+      setCustomers(customers.map(c => ({ 
+        ...c, 
+        items: [], 
+        total: parseFloat(equalAmount.toFixed(2)),
+        tipType: "percent",
+        tipValue: "",
+        tipAmount: 0 
+      })));
     } else {
       // Reset totals for custom split
-      setCustomers(customers.map(c => ({ ...c, items: [], total: 0 })));
+      setCustomers(customers.map(c => ({ 
+        ...c, 
+        items: [], 
+        total: 0,
+        tipType: "percent",
+        tipValue: "",
+        tipAmount: 0 
+      })));
     }
   };
   
@@ -131,6 +166,66 @@ export function useSplitBill(
     setCustomers(customers.map(c => 
       c.id === customerId ? { ...c, name } : c
     ));
+  };
+  
+  // New functions for individual tip handling
+  const handleCustomerTipTypeChange = (customerId: string, tipType: TipType) => {
+    setCustomers(customers.map(customer => {
+      if (customer.id === customerId) {
+        // Calculate the new tip amount based on the type change
+        const tipAmount = calculateTipAmount(
+          tipType, 
+          customer.tipValue, 
+          customer.total
+        );
+        
+        return {
+          ...customer,
+          tipType,
+          tipAmount
+        };
+      }
+      return customer;
+    }));
+  };
+  
+  const handleCustomerTipValueChange = (customerId: string, tipValue: string) => {
+    setCustomers(customers.map(customer => {
+      if (customer.id === customerId) {
+        // Calculate the new tip amount based on the value change
+        const tipAmount = calculateTipAmount(
+          customer.tipType, 
+          tipValue, 
+          customer.total
+        );
+        
+        return {
+          ...customer,
+          tipValue,
+          tipAmount
+        };
+      }
+      return customer;
+    }));
+  };
+  
+  // Helper function to calculate tip amount
+  const calculateTipAmount = (type: TipType, value: string, baseAmount: number): number => {
+    if (!value || isNaN(parseFloat(value))) return 0;
+    
+    if (type === "percent") {
+      const percentage = parseFloat(value);
+      return parseFloat((percentage / 100 * baseAmount).toFixed(2));
+    } else {
+      return parseFloat(parseFloat(value).toFixed(2));
+    }
+  };
+  
+  const getCustomerTotalWithTip = (customerId: string): number => {
+    const customer = customers.find(c => c.id === customerId);
+    if (!customer) return 0;
+    
+    return parseFloat((customer.total + customer.tipAmount).toFixed(2));
   };
   
   const handleCompleteSplit = () => {
@@ -184,8 +279,11 @@ export function useSplitBill(
     handleSplitTypeChange,
     handleAssignItemToCustomer,
     handleSetCustomerName,
+    handleCustomerTipTypeChange,
+    handleCustomerTipValueChange,
     handleCompleteSplit,
     isItemAssignedToCustomer,
-    getRemainingAmount
+    getRemainingAmount,
+    getCustomerTotalWithTip
   };
 }
