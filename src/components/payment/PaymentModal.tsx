@@ -40,6 +40,9 @@ export type SplitCustomer = {
   total: number;
 };
 
+// Define the PaymentStatus type so we can export it
+export type PaymentStatus = "idle" | "processing" | "success" | "cash-input" | "cash-change" | "split-bill";
+
 export function PaymentModal({ order, isOpen, onClose, onPaymentComplete }: PaymentModalProps) {
   const {
     paymentStatus,
@@ -73,7 +76,7 @@ export function PaymentModal({ order, isOpen, onClose, onPaymentComplete }: Paym
   // Create a wrapper function to handle type conversion
   const handleSetPaymentStatus = (status: string) => {
     // Type assertion to ensure status is a valid PaymentStatus
-    setPaymentStatus(status as "idle" | "processing" | "success" | "cash-input" | "cash-change" | "split-bill");
+    setPaymentStatus(status as PaymentStatus);
   };
 
   const getDialogTitle = () => {

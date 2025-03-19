@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Order, OrderItem } from "@/components/tables/TableActionPanel";
 import { CreditCard, Wallet, CircleDollarSign } from "lucide-react";
-import { SplitCustomer, PaymentMethod } from "./PaymentModal";
+import { SplitCustomer, PaymentMethod, PaymentStatus } from "./PaymentModal";
 
-type PaymentStatus = "idle" | "processing" | "success" | "cash-input" | "cash-change" | "split-bill";
 type TipType = "percent" | "amount";
 type SplitType = "equal" | "custom";
 
@@ -27,6 +26,7 @@ export function usePaymentState(order: Order, onPaymentComplete: (paymentMethod:
   ]);
   const [currentCustomerIndex, setCurrentCustomerIndex] = useState(0);
   
+  // Define payment methods with JSX icons
   const paymentMethods: PaymentMethod[] = [
     {
       id: "cash",
