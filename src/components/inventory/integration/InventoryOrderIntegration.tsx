@@ -1,12 +1,12 @@
 
 import { useEffect } from "react";
 import { useInventory } from "../InventoryContext";
-import { MenuItem } from "@/components/menu/MenuItem";
+import { MenuItemType } from "@/components/menu/MenuItem";
 import { Order } from "@/components/tables/TableActionPanel";
 
 interface InventoryOrderIntegrationProps {
   order: Order;
-  menuItems: MenuItem[];
+  menuItems: MenuItemType[];
 }
 
 export function InventoryOrderIntegration({ order, menuItems }: InventoryOrderIntegrationProps) {
