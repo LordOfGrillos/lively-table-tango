@@ -11,6 +11,8 @@ import { PaymentCashChange } from "./PaymentCashChange";
 import { PaymentSplitBill } from "./PaymentSplitBill";
 import { PaymentSplitSummary } from "./PaymentSplitSummary";
 import { usePaymentState } from "./usePaymentState";
+import { Badge } from "@/components/ui/badge";
+import { User } from "lucide-react";
 
 export type PaymentStatus = 
   | "idle" 
@@ -101,22 +103,38 @@ export function PaymentModal({ open, onClose, order, onPaymentComplete }: Paymen
     return customers[currentCustomerIndex]?.name || "";
   };
 
+  const renderCustomerBadge = () => {
+    if (!["customer-payment", "customer-cash-input", "customer-cash-change"].includes(paymentStatus)) {
+      return null;
+    }
+
+    return (
+      <Badge className="ml-2 bg-app-purple">
+        <User className="h-3 w-3 mr-1" />
+        {getCurrentCustomerName()}
+      </Badge>
+    );
+  };
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>
-            {paymentStatus === "idle" && "Payment"}
-            {paymentStatus === "processing" && "Processing Payment"}
-            {paymentStatus === "success" && "Payment Successful"}
-            {paymentStatus === "cash-input" && "Cash Payment"}
-            {paymentStatus === "cash-change" && "Change Due"}
-            {paymentStatus === "split-bill" && "Split Bill"}
-            {paymentStatus === "split-summary" && "Payment Summary"}
-            {paymentStatus === "customer-payment" && `${getCurrentCustomerName()}'s Payment`}
-            {paymentStatus === "customer-cash-input" && `${getCurrentCustomerName()}'s Cash Payment`}
-            {paymentStatus === "customer-cash-change" && `${getCurrentCustomerName()}'s Change Due`}
-          </DialogTitle>
+          <div className="flex items-center">
+            <DialogTitle>
+              {paymentStatus === "idle" && "Payment"}
+              {paymentStatus === "processing" && "Processing Payment"}
+              {paymentStatus === "success" && "Payment Successful"}
+              {paymentStatus === "cash-input" && "Cash Payment"}
+              {paymentStatus === "cash-change" && "Change Due"}
+              {paymentStatus === "split-bill" && "Split Bill"}
+              {paymentStatus === "split-summary" && "Payment Summary"}
+              {paymentStatus === "customer-payment" && `${getCurrentCustomerName()}'s Payment`}
+              {paymentStatus === "customer-cash-input" && `${getCurrentCustomerName()}'s Cash Payment`}
+              {paymentStatus === "customer-cash-change" && `${getCurrentCustomerName()}'s Change Due`}
+            </DialogTitle>
+            {renderCustomerBadge()}
+          </div>
         </DialogHeader>
 
         {paymentStatus === "idle" && (
@@ -149,12 +167,20 @@ export function PaymentModal({ open, onClose, order, onPaymentComplete }: Paymen
           <PaymentSuccess
             tipAmount={tipAmount}
             calculateTotalWithTip={calculateTotalWithTip}
-            customerName={undefined}
+            customerName={paymentStatus === "success" ? undefined : getCurrentCustomerName()}
           />
         )}
 
         {paymentStatus === "customer-payment" && (
           <>
+            <div className="mb-3 p-3 bg-muted/30 rounded-lg flex items-center">
+              <User className="h-5 w-5 text-app-purple mr-2" />
+              <div>
+                <p className="font-medium">{getCurrentCustomerName()}</p>
+                <p className="text-xs text-muted-foreground">Customer {currentCustomerIndex + 1} of {customers.length}</p>
+              </div>
+            </div>
+            
             <PaymentMethods
               paymentMethods={paymentMethods}
               selectedPaymentMethod={selectedPaymentMethod}
@@ -218,6 +244,55 @@ export function PaymentModal({ open, onClose, order, onPaymentComplete }: Paymen
           />
         )}
 
+        {paymentStatus === "customer-cash-input" && (
+          <>
+            <div className="mb-3 p-3 bg-muted/30 rounded-lg flex items-center">
+              <User className="h-5 w-5 text-app-purple mr-2" />
+              <div>
+                <p className="font-medium">{getCurrentCustomerName()}</p>
+                <p className="text-xs text-muted-foreground">Customer {currentCustomerIndex + 1} of {customers.length}</p>
+              </div>
+            </div>
+            
+            <PaymentCashInput
+              order={order}
+              tipAmount={customers[currentCustomerIndex]?.tipAmount || 0}
+              calculateTotalWithTip={() => getCustomerTotalWithTip(customers[currentCustomerIndex]?.id)}
+              cashReceived={cashReceived}
+              setCashReceived={setCashReceived}
+              handleCashAmountSubmit={handleCustomerCashAmountSubmit}
+              setPaymentStatus={(status: PaymentStatus) => {
+                if (status === "idle") {
+                  setPaymentStatus("customer-payment");
+                } else {
+                  setPaymentStatus(status);
+                }
+              }}
+            />
+          </>
+        )}
+
+        {paymentStatus === "customer-cash-change" && (
+          <>
+            <div className="mb-3 p-3 bg-muted/30 rounded-lg flex items-center">
+              <User className="h-5 w-5 text-app-purple mr-2" />
+              <div>
+                <p className="font-medium">{getCurrentCustomerName()}</p>
+                <p className="text-xs text-muted-foreground">Customer {currentCustomerIndex + 1} of {customers.length}</p>
+              </div>
+            </div>
+            
+            <PaymentCashChange
+              order={order}
+              tipAmount={customers[currentCustomerIndex]?.tipAmount || 0}
+              cashReceived={cashReceived}
+              changeAmount={changeAmount}
+              calculateTotalWithTip={() => getCustomerTotalWithTip(customers[currentCustomerIndex]?.id)}
+              handleCashPaymentComplete={handleCashPaymentComplete}
+            />
+          </>
+        )}
+
         {paymentStatus === "split-bill" && (
           <PaymentSplitBill
             order={order}
@@ -249,35 +324,6 @@ export function PaymentModal({ open, onClose, order, onPaymentComplete }: Paymen
             customersPaid={customersPaid}
             handleComplete={handleCompleteAllPayments}
             setPaymentStatus={(status: PaymentStatus) => setPaymentStatus(status)}
-          />
-        )}
-
-        {paymentStatus === "customer-cash-input" && (
-          <PaymentCashInput
-            order={order}
-            tipAmount={customers[currentCustomerIndex]?.tipAmount || 0}
-            calculateTotalWithTip={() => getCustomerTotalWithTip(customers[currentCustomerIndex]?.id)}
-            cashReceived={cashReceived}
-            setCashReceived={setCashReceived}
-            handleCashAmountSubmit={handleCustomerCashAmountSubmit}
-            setPaymentStatus={(status: PaymentStatus) => {
-              if (status === "idle") {
-                setPaymentStatus("customer-payment");
-              } else {
-                setPaymentStatus(status);
-              }
-            }}
-          />
-        )}
-
-        {paymentStatus === "customer-cash-change" && (
-          <PaymentCashChange
-            order={order}
-            tipAmount={customers[currentCustomerIndex]?.tipAmount || 0}
-            cashReceived={cashReceived}
-            changeAmount={changeAmount}
-            calculateTotalWithTip={() => getCustomerTotalWithTip(customers[currentCustomerIndex]?.id)}
-            handleCashPaymentComplete={handleCashPaymentComplete}
           />
         )}
       </DialogContent>
