@@ -74,12 +74,22 @@ export function InventoryAddItem() {
       // Convert expiryDate string to Date object if provided
       const expiryDate = data.expiryDate ? new Date(data.expiryDate) : undefined;
 
-      // Add item to inventory
+      // Add item to inventory - Fix here: ensure all required properties are provided
       addItem({
-        ...data,
-        expiryDate,
+        name: data.name,                 // Explicitly provide required properties
+        type: data.type,
+        category: data.category,
+        currentStock: data.currentStock,
+        unit: data.unit,
+        minStockLevel: data.minStockLevel,
+        cost: data.cost,
+        expiryDate,                      // Optional
+        location: data.location,         // Optional
+        barcode: data.barcode,           // Optional
+        supplier: data.supplier,         // Optional
+        notes: data.notes,               // Optional
         imageSrc: imageSrc || "/placeholder.svg",
-        usedInRecipes: [], // Start with no recipes using this item
+        usedInRecipes: [],               // Start with no recipes using this item
       });
 
       // Reset form
