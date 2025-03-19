@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { TableStatus } from "@/components/tables/TableShape";
 import { Order } from "@/components/tables/TableActionPanel";
@@ -59,6 +60,10 @@ export function useTableManager(onTableSelect?: (tableId: string, tableNumber: s
   const [isEditMode, setIsEditMode] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
   
+  // Multi-table selection
+  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
+  const [selectedTables, setSelectedTables] = useState<string[]>([]);
+  
   const selectedTableDetails = selectedTable
     ? tables.find(table => table.id === selectedTable)
     : undefined;
@@ -79,7 +84,19 @@ export function useTableManager(onTableSelect?: (tableId: string, tableNumber: s
   });
   
   const handleTableClick = (tableId: string) => {
-    if (!isEditMode) {
+    if (isEditMode) return;
+    
+    if (isMultiSelectMode) {
+      // In multi-select mode, toggle the selected state of the clicked table
+      setSelectedTables(prev => {
+        if (prev.includes(tableId)) {
+          return prev.filter(id => id !== tableId);
+        } else {
+          return [...prev, tableId];
+        }
+      });
+    } else {
+      // In single-select mode, behave as before
       setSelectedTable(tableId);
       
       if (onTableSelect) {
@@ -89,6 +106,153 @@ export function useTableManager(onTableSelect?: (tableId: string, tableNumber: s
         }
       }
     }
+  };
+  
+  const toggleMultiSelectMode = () => {
+    setIsMultiSelectMode(!isMultiSelectMode);
+    setSelectedTables([]);
+    setSelectedTable(null);
+  };
+  
+  const getSelectedTablesDetails = () => {
+    return tables.filter(table => selectedTables.includes(table.id));
+  };
+  
+  const getSelectedTablesOrders = () => {
+    return orders.filter(order => 
+      selectedTables.includes(order.tableId) && 
+      (order.status === 'new' || order.status === 'in-progress')
+    );
+  };
+  
+  const handleTransferTables = (targetTableId: string) => {
+    if (selectedTables.length === 0 || !targetTableId) return;
+    
+    // Get all orders from selected tables
+    const ordersToTransfer = orders.filter(order => 
+      selectedTables.includes(order.tableId) && 
+      (order.status === 'new' || order.status === 'in-progress')
+    );
+    
+    if (ordersToTransfer.length === 0) {
+      toast.error("No active orders to transfer");
+      return;
+    }
+    
+    // Update all orders to the target table
+    const targetTable = tables.find(t => t.id === targetTableId);
+    if (!targetTable) return;
+    
+    setOrders(prevOrders => {
+      return prevOrders.map(order => {
+        if (selectedTables.includes(order.tableId) && (order.status === 'new' || order.status === 'in-progress')) {
+          return {
+            ...order,
+            tableId: targetTableId,
+            tableNumber: targetTable.number
+          };
+        }
+        return order;
+      });
+    });
+    
+    // Update status of the tables
+    setTables(prevTables => {
+      return prevTables.map(table => {
+        if (selectedTables.includes(table.id)) {
+          return {
+            ...table,
+            status: 'available',
+            timer: undefined
+          };
+        } else if (table.id === targetTableId) {
+          return {
+            ...table,
+            status: 'occupied',
+            timer: 0
+          };
+        }
+        return table;
+      });
+    });
+    
+    toast.success(`Orders transferred to Table ${targetTable.number}`, {
+      description: `${ordersToTransfer.length} orders successfully moved`
+    });
+    
+    // Reset selection
+    setSelectedTables([]);
+    setIsMultiSelectMode(false);
+  };
+  
+  const handleCombineTables = (combinedTableId: string) => {
+    if (selectedTables.length === 0 || !combinedTableId) return;
+    
+    // Get all orders from selected tables
+    const ordersToCombine = orders.filter(order => 
+      selectedTables.includes(order.tableId) && 
+      (order.status === 'new' || order.status === 'in-progress')
+    );
+    
+    if (ordersToCombine.length === 0) {
+      toast.error("No active orders to combine");
+      return;
+    }
+    
+    // Find the target table
+    const targetTable = tables.find(t => t.id === combinedTableId);
+    if (!targetTable) return;
+    
+    // Create a new combined order
+    const allItems = ordersToCombine.flatMap(order => order.items);
+    const totalAmount = ordersToCombine.reduce((sum, order) => sum + order.total, 0);
+    
+    const combinedOrder: Order = {
+      id: `order-combined-${Date.now()}`,
+      tableId: combinedTableId,
+      tableNumber: targetTable.number,
+      status: 'in-progress',
+      customerName: 'Combined Order',
+      items: allItems,
+      createdAt: new Date(),
+      total: totalAmount
+    };
+    
+    // Remove the original orders and add the combined one
+    setOrders(prevOrders => {
+      const remainingOrders = prevOrders.filter(order => 
+        !(selectedTables.includes(order.tableId) && (order.status === 'new' || order.status === 'in-progress'))
+      );
+      return [...remainingOrders, combinedOrder];
+    });
+    
+    // Update table statuses
+    setTables(prevTables => {
+      return prevTables.map(table => {
+        if (selectedTables.includes(table.id) && table.id !== combinedTableId) {
+          return {
+            ...table,
+            status: 'available',
+            timer: undefined
+          };
+        } else if (table.id === combinedTableId) {
+          return {
+            ...table,
+            status: 'occupied',
+            timer: 0
+          };
+        }
+        return table;
+      });
+    });
+    
+    toast.success(`Orders combined on Table ${targetTable.number}`, {
+      description: `${ordersToCombine.length} orders successfully combined`
+    });
+    
+    // Reset selection
+    setSelectedTables([]);
+    setIsMultiSelectMode(false);
   };
   
   const handleStatusChange = (tableId: string, newStatus: TableStatus) => {
@@ -189,6 +353,15 @@ export function useTableManager(onTableSelect?: (tableId: string, tableNumber: s
     isEditMode,
     selectedTableDetails,
     existingOrder,
+    // Multi-select related
+    isMultiSelectMode,
+    selectedTables,
+    toggleMultiSelectMode,
+    getSelectedTablesDetails,
+    getSelectedTablesOrders,
+    handleTransferTables,
+    handleCombineTables,
+    // Original functions
     handleTableClick,
     handleStatusChange,
     handleReservationCreate,

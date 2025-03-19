@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Clock } from "lucide-react";
+import { Clock, Check } from "lucide-react";
 
 export type TableStatus = 'available' | 'reserved' | 'filled' | 'occupied';
 
@@ -13,6 +13,7 @@ export type TableProps = {
   shape: 'round' | 'rectangular';
   timer?: number; // Time in minutes
   selected?: boolean;
+  multiSelect?: boolean;
   onClick?: (id: string) => void;
   className?: string;
 };
@@ -66,6 +67,7 @@ export function TableShape({
   shape,
   timer,
   selected = false,
+  multiSelect = false,
   onClick,
   className,
 }: TableProps) {
@@ -78,13 +80,19 @@ export function TableShape({
         "table-shape flex flex-col items-center justify-center cursor-pointer",
         shape === 'round' ? "table-round" : "table-rectangular",
         statusStyle.bg,
-        selected && "ring-2 ring-app-purple table-selected",
+        selected && (multiSelect ? "ring-2 ring-app-purple bg-app-purple/10" : "ring-2 ring-app-purple table-selected"),
         className
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => onClick?.(id)}
     >
+      {selected && multiSelect && (
+        <div className="absolute -top-2 -right-2 bg-app-purple text-white p-0.5 rounded-full">
+          <Check className="h-3 w-3" />
+        </div>
+      )}
+      
       <span className="font-medium">{number}</span>
       
       {/* Show capacity only on hover or if table is not empty */}

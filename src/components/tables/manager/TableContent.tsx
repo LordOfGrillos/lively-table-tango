@@ -11,6 +11,8 @@ type TableContentProps = {
   onTableClick: (tableId: string) => void;
   onFilterChange: (filters: TableStatus[]) => void;
   onSearch: (query: string) => void;
+  multiSelectMode?: boolean;
+  selectedTables?: string[];
 };
 
 export function TableContent({
@@ -19,7 +21,9 @@ export function TableContent({
   selectedFilters,
   onTableClick,
   onFilterChange,
-  onSearch
+  onSearch,
+  multiSelectMode = false,
+  selectedTables = []
 }: TableContentProps) {
   return (
     <>
@@ -34,6 +38,8 @@ export function TableContent({
           tables={filteredTables}
           selectedTable={selectedTable}
           onTableClick={onTableClick}
+          multiSelectMode={multiSelectMode}
+          selectedTables={selectedTables}
         />
       </div>
     </>

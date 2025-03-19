@@ -8,12 +8,16 @@ type TableWithPositionProps = {
   }>;
   selectedTable: string | null;
   onTableClick: (tableId: string) => void;
+  multiSelectMode?: boolean;
+  selectedTables?: string[];
 };
 
 export function TablePositioning({ 
   tables, 
   selectedTable, 
-  onTableClick 
+  onTableClick,
+  multiSelectMode = false,
+  selectedTables = []
 }: TableWithPositionProps) {
   if (tables.length === 0) {
     return (
@@ -36,8 +40,9 @@ export function TablePositioning({
         >
           <TableShape
             {...table}
-            selected={selectedTable === table.id}
+            selected={multiSelectMode ? selectedTables.includes(table.id) : selectedTable === table.id}
             onClick={onTableClick}
+            multiSelect={multiSelectMode}
           />
         </div>
       ))}
