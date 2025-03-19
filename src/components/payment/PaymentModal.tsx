@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Order } from "@/components/tables/TableActionPanel";
@@ -12,16 +13,16 @@ import { PaymentSplitSummary } from "./PaymentSplitSummary";
 import { usePaymentState } from "./usePaymentState";
 
 export type PaymentStatus = 
-  "idle" | 
-  "processing" | 
-  "success" | 
-  "cash-input" | 
-  "cash-change" | 
-  "split-bill" | 
-  "split-summary" | 
-  "customer-payment" | 
-  "customer-cash-input" | 
-  "customer-cash-change";
+  | "idle" 
+  | "processing" 
+  | "success" 
+  | "cash-input" 
+  | "cash-change" 
+  | "split-bill" 
+  | "split-summary" 
+  | "customer-payment" 
+  | "customer-cash-input" 
+  | "customer-cash-change";
 
 export interface PaymentMethod {
   id: string;
