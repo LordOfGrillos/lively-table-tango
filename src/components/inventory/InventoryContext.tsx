@@ -387,10 +387,17 @@ const mockAlerts: InventoryAlert[] = [
 
 // Context provider component
 export const InventoryProvider = ({ children }: { children: ReactNode }) => {
+  // Initialize with mock data
   const [items, setItems] = useState<InventoryItem[]>(mockItems);
   const [transactions, setTransactions] = useState<InventoryTransaction[]>(mockTransactions);
   const [alerts, setAlerts] = useState<InventoryAlert[]>(mockAlerts);
   const [categories, setCategories] = useState<InventoryCategory[]>(mockCategories);
+
+  // Initialize alerts on component mount
+  useEffect(() => {
+    // Check for alerts for each item
+    items.forEach(item => checkForAlerts(item));
+  }, []);
 
   const updateItemStatus = (item: InventoryItem): InventoryItemStatus => {
     if (item.currentStock <= 0) return "out-of-stock";
@@ -663,9 +670,6 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
       return updated;
     });
   };
-
-  // Update App.tsx to handle inventory deduction from orders
-  // This would ideally be implemented in the order processing logic
 
   const value = {
     items,

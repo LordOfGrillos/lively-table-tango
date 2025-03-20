@@ -1,3 +1,4 @@
+
 import { AlertTriangle, TrendingDown, TrendingUp, Package, DollarSign, Clock } from "lucide-react";
 import { useInventory } from "./InventoryContext";
 import { Card } from "@/components/ui/card";
@@ -14,8 +15,11 @@ import { EmptyInventory } from "./EmptyInventory";
 export function InventoryDashboard({ onAddItem }: { onAddItem: () => void }) {
   const { items, alerts, transactions } = useInventory();
   
+  // Force inventory items to be displayed even when just one mock item
+  const hasItems = items.length > 0;
+  
   // Show empty state if no items
-  if (items.length === 0) {
+  if (!hasItems) {
     return <EmptyInventory onAddItem={onAddItem} />;
   }
   

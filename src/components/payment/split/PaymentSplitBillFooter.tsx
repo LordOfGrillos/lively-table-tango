@@ -19,11 +19,11 @@ export function PaymentSplitBillFooter({
   const isCustomSplitValid = splitType !== "custom" || getRemainingAmount() === 0;
 
   return (
-    <DialogFooter className="flex flex-col sm:flex-row justify-between w-full gap-2 pt-4">
+    <DialogFooter className="flex flex-col sm:flex-row justify-between w-full gap-2 pt-4 border-t">
       <Button
         variant="outline"
         onClick={() => setPaymentStatus("idle")}
-        className="flex items-center w-full sm:w-auto"
+        className="flex items-center w-full sm:w-auto justify-center"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back to Payment Options
@@ -42,7 +42,7 @@ export function PaymentSplitBillFooter({
           : (
             <>
               <UsersRound className="mr-2 h-4 w-4" />
-              Assign Remaining Items (${getRemainingAmount().toFixed(2)})
+              Assign Remaining ${getRemainingAmount().toFixed(2)}
             </>
           )
         }
