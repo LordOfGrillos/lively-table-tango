@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Order } from "@/components/tables/TableActionPanel";
 import { usePaymentState } from "./usePaymentState";
 import { ModalTitle } from "./modal/ModalTitle";
@@ -96,12 +96,14 @@ export function PaymentModal({ open, onClose, order, onPaymentComplete }: Paymen
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <ModalTitle 
-            paymentStatus={paymentStatus} 
-            getCurrentCustomerName={getCurrentCustomerName} 
-          />
+          <DialogTitle>
+            <ModalTitle 
+              paymentStatus={paymentStatus} 
+              getCurrentCustomerName={getCurrentCustomerName} 
+            />
+          </DialogTitle>
         </DialogHeader>
 
         <ModalContent 

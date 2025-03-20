@@ -6,6 +6,8 @@ import { CustomerInfo } from "../CustomerInfo";
 import { PaymentMethod } from "../../PaymentModal";
 import { CreditCard, Banknote, ArrowLeft, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 interface CustomerPaymentContentProps {
   selectedPaymentMethod: string;
@@ -37,45 +39,67 @@ export function CustomerPaymentContent({
   const customerName = getCurrentCustomerName();
 
   return (
-    <>
-      <div className="bg-app-purple/10 rounded-lg p-4 mb-6 border border-app-purple/30">
-        <div className="flex items-center gap-3">
-          <div className="bg-app-purple rounded-full p-2">
-            <User className="h-5 w-5 text-white" />
+    <div className="space-y-6">
+      {/* Customer Banner - Highly visible indicator */}
+      <Card className="border-app-purple">
+        <CardHeader className="bg-app-purple text-white py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="bg-white rounded-full p-1.5">
+                <User className="h-5 w-5 text-app-purple" />
+              </div>
+              <div>
+                <CardTitle>{customerName}'s Payment</CardTitle>
+                <CardDescription className="text-white/80">
+                  Processing payment for customer {currentCustomerIndex + 1} of {totalCustomers}
+                </CardDescription>
+              </div>
+            </div>
+            <Badge variant="outline" className="bg-white text-app-purple border-white">
+              ${customerTotal.toFixed(2)}
+            </Badge>
           </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Now Processing Payment For:</p>
-            <p className="font-semibold text-lg text-app-purple">{customerName}</p>
-          </div>
-          <Badge variant="outline" className="ml-auto">
-            Customer {currentCustomerIndex + 1} of {totalCustomers}
-          </Badge>
-        </div>
-      </div>
+        </CardHeader>
+      </Card>
       
-      <PaymentMethods
-        paymentMethods={paymentMethods}
-        selectedPaymentMethod={selectedPaymentMethod}
-        setSelectedPaymentMethod={setSelectedPaymentMethod}
-      />
+      {/* Payment Methods Selection */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Select Payment Method</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <PaymentMethods
+            paymentMethods={paymentMethods}
+            selectedPaymentMethod={selectedPaymentMethod}
+            setSelectedPaymentMethod={setSelectedPaymentMethod}
+          />
+        </CardContent>
+      </Card>
       
-      <div className="py-4 space-y-4">
-        <div className="border-t pt-4">
-          <div className="flex justify-between text-sm mb-1">
+      {/* Payment Summary */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Payment Summary</CardTitle>
+          <CardDescription>
+            {customerName}'s portion of the bill
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="flex justify-between text-sm">
             <span>Subtotal:</span>
             <span>${customerSubtotal.toFixed(2)}</span>
           </div>
-          <div className="flex justify-between text-sm mb-1">
+          <div className="flex justify-between text-sm">
             <span>Tip:</span>
             <span>${customerTipAmount.toFixed(2)}</span>
           </div>
-          <div className="flex justify-between font-medium">
+          <Separator />
+          <div className="flex justify-between font-medium text-lg">
             <span>Total:</span>
             <span>${customerTotal.toFixed(2)}</span>
           </div>
-        </div>
-        
-        <div className="flex justify-end gap-2">
+        </CardContent>
+        <CardFooter className="flex justify-between gap-2 pt-4">
           <Button 
             variant="outline"
             onClick={() => setPaymentStatus("split-summary")}
@@ -102,8 +126,8 @@ export function CustomerPaymentContent({
               Process Card Payment
             </Button>
           )}
-        </div>
-      </div>
-    </>
+        </CardFooter>
+      </Card>
+    </div>
   );
 }

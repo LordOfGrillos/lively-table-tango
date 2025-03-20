@@ -8,13 +8,15 @@ interface DollarSignInputProps {
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+  autoFocus?: boolean;
 }
 
 export function DollarSignInput({
   value,
   onChange,
   placeholder,
-  className
+  className,
+  autoFocus = false
 }: DollarSignInputProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Only allow numbers and decimals
@@ -38,6 +40,7 @@ export function DollarSignInput({
         onChange={handleChange}
         placeholder={placeholder || "0.00"}
         className={cn("pl-8", className)}
+        autoFocus={autoFocus}
       />
     </div>
   );
