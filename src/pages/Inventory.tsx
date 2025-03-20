@@ -1,9 +1,11 @@
+
 import { useState } from "react";
 import { Header } from "@/components/layout/Header";
 import { InventoryDashboard } from "@/components/inventory/InventoryDashboard";
 import { InventoryTabs } from "@/components/inventory/InventoryTabs";
 import { InventoryProvider } from "@/components/inventory/InventoryContext";
 import { InventoryAddItem } from "@/components/inventory/InventoryAddItem";
+import { InventoryItemsList } from "@/components/inventory/InventoryItemsList";
 import { PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sidebar } from "@/components/layout/Sidebar";
@@ -41,6 +43,7 @@ export default function Inventory() {
             
             <div className="mt-4">
               {activeTab === "dashboard" && <InventoryDashboard onAddItem={handleAddItem} />}
+              {activeTab === "inventory" && <InventoryItemsList />}
               {activeTab === "add" && <InventoryAddItem />}
               {/* Other tabs content will be rendered based on activeTab */}
             </div>
