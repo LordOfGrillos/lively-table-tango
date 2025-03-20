@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Order } from "@/components/tables/TableActionPanel";
 import { PaymentStatus } from "./PaymentModal";
@@ -149,6 +148,10 @@ export function usePaymentState(order: Order, onPaymentComplete: (paymentMethod:
     setPaymentStatus("split-summary");
   };
 
+  const handleSplitBillClick = () => {
+    setPaymentStatus("split-bill");
+  };
+
   return {
     selectedPaymentMethod,
     setSelectedPaymentMethod,
@@ -172,7 +175,7 @@ export function usePaymentState(order: Order, onPaymentComplete: (paymentMethod:
     handleTipValueChange,
     handleTipTypeChange,
     handlePaymentSubmit,
-    handleSplitBill,
+    handleSplitBill: handleSplitBillClick,
     handleCashAmountSubmit,
     handleCustomerCashAmountSubmit,
     handleCashPaymentComplete,

@@ -19,17 +19,17 @@ export function PaymentSplitBillFooter({
   const isCustomSplitValid = splitType !== "custom" || getRemainingAmount() === 0;
 
   return (
-    <DialogFooter className="flex justify-between w-full gap-2 pt-4">
+    <DialogFooter className="flex flex-col sm:flex-row justify-between w-full gap-2 pt-4">
       <Button
         variant="outline"
         onClick={() => setPaymentStatus("idle")}
-        className="flex items-center"
+        className="flex items-center w-full sm:w-auto"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back to Payment Options
       </Button>
       <Button 
-        className="bg-app-purple hover:bg-app-purple/90"
+        className="bg-app-purple hover:bg-app-purple/90 w-full sm:w-auto"
         onClick={handleCompleteSplit}
         disabled={!isCustomSplitValid}
       >
