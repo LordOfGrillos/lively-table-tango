@@ -62,7 +62,8 @@ export function usePaymentState(order: Order, onPaymentComplete: (paymentMethod:
 
   const getCurrentCustomerName = (): string => {
     if (customers.length > currentCustomerIndex) {
-      return customers[currentCustomerIndex].name;
+      const name = customers[currentCustomerIndex].name;
+      return name ? name : `Customer ${currentCustomerIndex + 1}`;
     }
     return "Customer";
   };

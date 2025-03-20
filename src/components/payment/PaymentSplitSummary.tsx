@@ -3,7 +3,9 @@ import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
 import { SplitCustomer } from "./PaymentModal";
 import { Badge } from "@/components/ui/badge";
-import { User, CreditCard, Check } from "lucide-react";
+import { User, CreditCard, Check, Banknote } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { useState } from "react";
 
 interface PaymentSplitSummaryProps {
   customers: SplitCustomer[];
@@ -29,21 +31,24 @@ export function PaymentSplitSummary({
   return (
     <div className="py-4 space-y-4">
       <div className="space-y-2">
-        <h3 className="text-lg font-medium">Payment Summary</h3>
+        <h3 className="text-lg font-medium">Split Bill Payment Summary</h3>
         <p className="text-sm text-muted-foreground">
-          Each customer's check can be paid separately.
+          Each customer's portion can be paid separately
         </p>
       </div>
       
       <div className="border rounded-lg divide-y max-h-[350px] overflow-y-auto">
         {customers.map((customer, index) => {
           const isPaid = customersPaid[index];
+          const total = getCustomerTotalWithTip(customer.id);
           
           return (
             <div key={customer.id} className={`p-4 ${isPaid ? 'bg-green-50' : ''}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-muted-foreground" />
+                  <div className="bg-app-purple/10 rounded-full p-1.5">
+                    <User className="h-4 w-4 text-app-purple" />
+                  </div>
                   <span className="font-medium">{customer.name}</span>
                   {isPaid && (
                     <Badge className="bg-green-600">
@@ -51,8 +56,8 @@ export function PaymentSplitSummary({
                     </Badge>
                   )}
                 </div>
-                <span className="font-medium">
-                  ${getCustomerTotalWithTip(customer.id).toFixed(2)}
+                <span className="font-medium text-lg">
+                  ${total.toFixed(2)}
                 </span>
               </div>
               
@@ -63,14 +68,24 @@ export function PaymentSplitSummary({
                 </div>
                 
                 {!isPaid && (
-                  <Button 
-                    onClick={() => handlePayCustomer(index)}
-                    size="sm"
-                    className="bg-app-purple hover:bg-app-purple/90"
-                  >
-                    <CreditCard className="mr-2 h-4 w-4" />
-                    Pay {customer.name}'s Bill (${getCustomerTotalWithTip(customer.id).toFixed(2)})
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={() => handlePayCustomer(index)}
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      <Banknote className="mr-2 h-4 w-4" />
+                      Cash
+                    </Button>
+                    <Button 
+                      onClick={() => handlePayCustomer(index)}
+                      size="sm"
+                      className="bg-app-purple hover:bg-app-purple/90"
+                    >
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      Card
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>
@@ -83,14 +98,14 @@ export function PaymentSplitSummary({
           variant="outline"
           onClick={() => setPaymentStatus("split-bill")}
         >
-          Back
+          Back to Split Settings
         </Button>
         <Button
           className={`${allPaid ? 'bg-green-600 hover:bg-green-700' : 'bg-app-purple hover:bg-app-purple/90'}`}
           onClick={handleComplete}
           disabled={!allPaid}
         >
-          {allPaid ? 'Complete All Payments' : `Pay All Checks (${customersPaid.filter(p => p).length}/${customers.length})`}
+          {allPaid ? 'Complete All Payments' : `${customersPaid.filter(p => p).length}/${customers.length} Customers Paid`}
         </Button>
       </DialogFooter>
     </div>

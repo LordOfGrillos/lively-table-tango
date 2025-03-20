@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
+import { UsersRound } from "lucide-react";
 
 interface PaymentSplitBillFooterProps {
   splitType: "equal" | "custom";
@@ -15,6 +16,8 @@ export function PaymentSplitBillFooter({
   handleCompleteSplit,
   setPaymentStatus
 }: PaymentSplitBillFooterProps) {
+  const isCustomSplitValid = splitType !== "custom" || getRemainingAmount() === 0;
+
   return (
     <DialogFooter className="pt-2">
       <Button
@@ -26,9 +29,13 @@ export function PaymentSplitBillFooter({
       <Button 
         className="bg-app-purple hover:bg-app-purple/90"
         onClick={handleCompleteSplit}
-        disabled={splitType === "custom" && getRemainingAmount() !== 0}
+        disabled={!isCustomSplitValid}
       >
-        Apply Split
+        <UsersRound className="mr-2 h-4 w-4" />
+        {isCustomSplitValid 
+          ? "Continue to Split Payment"
+          : `Assign Remaining Items ($${getRemainingAmount().toFixed(2)})`
+        }
       </Button>
     </DialogFooter>
   );

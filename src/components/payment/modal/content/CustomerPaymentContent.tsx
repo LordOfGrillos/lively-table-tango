@@ -4,6 +4,7 @@ import { PaymentMethods } from "../../PaymentMethods";
 import { Button } from "@/components/ui/button";
 import { CustomerInfo } from "../CustomerInfo";
 import { PaymentMethod } from "../../PaymentModal";
+import { CreditCard } from "lucide-react";
 
 interface CustomerPaymentContentProps {
   selectedPaymentMethod: string;
@@ -32,14 +33,22 @@ export function CustomerPaymentContent({
   currentCustomerIndex,
   totalCustomers
 }: CustomerPaymentContentProps) {
+  const customerName = getCurrentCustomerName();
+
   return (
     <>
       <CustomerInfo 
         paymentStatus="customer-payment"
-        customerName={getCurrentCustomerName()}
+        customerName={customerName}
         customerIndex={currentCustomerIndex}
         totalCustomers={totalCustomers}
       />
+      
+      <div className="bg-muted/30 rounded-lg p-3 mb-4 border">
+        <p className="font-semibold text-center text-lg text-app-purple">
+          Paying {customerName}'s Portion
+        </p>
+      </div>
       
       <PaymentMethods
         paymentMethods={paymentMethods}
@@ -68,13 +77,14 @@ export function CustomerPaymentContent({
             variant="outline"
             onClick={() => setPaymentStatus("split-summary")}
           >
-            Back
+            Back to Split Summary
           </Button>
           <Button 
             className="bg-app-purple hover:bg-app-purple/90 text-white"
             onClick={handlePaymentSubmit}
           >
-            Pay {getCurrentCustomerName()}'s Bill
+            <CreditCard className="mr-2 h-4 w-4" />
+            Process {customerName}'s Payment (${customerTotal.toFixed(2)})
           </Button>
         </div>
       </div>
