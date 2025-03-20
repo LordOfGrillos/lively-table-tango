@@ -1,17 +1,15 @@
 
 import React from "react";
 import { PaymentStatus, SplitCustomer, PaymentMethod } from "../PaymentModal";
-import { PaymentMethods } from "../PaymentMethods";
-import { PaymentTip } from "../PaymentTip";
 import { PaymentProcessing } from "../PaymentProcessing";
 import { PaymentSuccess } from "../PaymentSuccess";
-import { PaymentCashInput } from "../PaymentCashInput";
-import { PaymentCashChange } from "../PaymentCashChange";
 import { PaymentSplitBill } from "../PaymentSplitBill";
 import { PaymentSplitSummary } from "../PaymentSplitSummary";
-import { CustomerInfo } from "./CustomerInfo";
 import { Order } from "@/components/tables/TableActionPanel";
-import { Button } from "@/components/ui/button";
+import { IdleContent } from "./content/IdleContent";
+import { CustomerPaymentContent } from "./content/CustomerPaymentContent";
+import { CashInputContent } from "./content/CashInputContent";
+import { CashChangeContent } from "./content/CashChangeContent";
 
 interface ModalContentProps {
   paymentStatus: PaymentStatus;
@@ -97,86 +95,24 @@ export function ModalContent({
   numberOfCustomers
 }: ModalContentProps) {
   
-  const renderCustomerInfo = () => {
-    return (
-      <CustomerInfo 
-        paymentStatus={paymentStatus}
-        customerName={getCurrentCustomerName()}
-        customerIndex={currentCustomerIndex}
-        totalCustomers={customers.length}
-      />
-    );
-  };
-
-  const renderCustomerPaymentSection = () => {
-    return (
-      <>
-        {renderCustomerInfo()}
-        
-        <PaymentMethods
-          paymentMethods={paymentMethods}
-          selectedPaymentMethod={selectedPaymentMethod}
-          setSelectedPaymentMethod={setSelectedPaymentMethod}
-        />
-        
-        <div className="py-4 space-y-4">
-          <div className="border-t pt-4">
-            <div className="flex justify-between text-sm mb-1">
-              <span>Subtotal:</span>
-              <span>${customers[currentCustomerIndex]?.total.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between text-sm mb-1">
-              <span>Tip:</span>
-              <span>${customers[currentCustomerIndex]?.tipAmount.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between font-medium">
-              <span>Total:</span>
-              <span>${getCustomerTotalWithTip(customers[currentCustomerIndex]?.id).toFixed(2)}</span>
-            </div>
-          </div>
-          
-          <div className="flex justify-end gap-2">
-            <Button 
-              variant="outline"
-              onClick={() => setPaymentStatus("split-summary")}
-            >
-              Back
-            </Button>
-            <Button 
-              className="bg-app-purple hover:bg-app-purple/90 text-white"
-              onClick={handlePaymentSubmit}
-            >
-              Pay {getCurrentCustomerName()}'s Bill
-            </Button>
-          </div>
-        </div>
-      </>
-    );
-  };
-
   const renderContentByStatus = () => {
     switch (paymentStatus) {
       case "idle":
         return (
-          <>
-            <PaymentMethods
-              paymentMethods={paymentMethods}
-              selectedPaymentMethod={selectedPaymentMethod}
-              setSelectedPaymentMethod={setSelectedPaymentMethod}
-            />
-            
-            <PaymentTip
-              order={order}
-              tipType={tipType}
-              tipValue={tipValue}
-              tipAmount={tipAmount}
-              calculateTotalWithTip={calculateTotalWithTip}
-              handleTipTypeChange={handleTipTypeChange}
-              handleTipValueChange={handleTipValueChange}
-              handlePaymentSubmit={handlePaymentSubmit}
-              handleSplitBill={handleSplitBill}
-            />
-          </>
+          <IdleContent
+            order={order}
+            selectedPaymentMethod={selectedPaymentMethod}
+            setSelectedPaymentMethod={setSelectedPaymentMethod}
+            tipType={tipType}
+            tipValue={tipValue}
+            tipAmount={tipAmount}
+            calculateTotalWithTip={calculateTotalWithTip}
+            handleTipTypeChange={handleTipTypeChange}
+            handleTipValueChange={handleTipValueChange}
+            handlePaymentSubmit={handlePaymentSubmit}
+            handleSplitBill={handleSplitBill}
+            paymentMethods={paymentMethods}
+          />
         );
       
       case "processing":
@@ -192,70 +128,80 @@ export function ModalContent({
         );
       
       case "customer-payment":
-        return renderCustomerPaymentSection();
+        return (
+          <CustomerPaymentContent
+            selectedPaymentMethod={selectedPaymentMethod}
+            setSelectedPaymentMethod={setSelectedPaymentMethod}
+            paymentMethods={paymentMethods}
+            handlePaymentSubmit={handlePaymentSubmit}
+            setPaymentStatus={setPaymentStatus}
+            customerSubtotal={customers[currentCustomerIndex]?.total || 0}
+            customerTipAmount={customers[currentCustomerIndex]?.tipAmount || 0}
+            customerTotal={getCustomerTotalWithTip(customers[currentCustomerIndex]?.id)}
+            getCurrentCustomerName={getCurrentCustomerName}
+            currentCustomerIndex={currentCustomerIndex}
+            totalCustomers={customers.length}
+          />
+        );
       
       case "cash-input":
         return (
-          <PaymentCashInput
+          <CashInputContent
             order={order}
             tipAmount={tipAmount}
             calculateTotalWithTip={calculateTotalWithTip}
             cashReceived={cashReceived}
             setCashReceived={setCashReceived}
             handleCashAmountSubmit={handleCashAmountSubmit}
-            setPaymentStatus={(status: PaymentStatus) => setPaymentStatus(status)}
+            setPaymentStatus={setPaymentStatus}
+            paymentStatus={paymentStatus}
           />
         );
       
       case "cash-change":
         return (
-          <PaymentCashChange
+          <CashChangeContent
             order={order}
             tipAmount={tipAmount}
             cashReceived={cashReceived}
             changeAmount={changeAmount}
             calculateTotalWithTip={calculateTotalWithTip}
             handleCashPaymentComplete={handleCashPaymentComplete}
+            paymentStatus={paymentStatus}
           />
         );
       
       case "customer-cash-input":
         return (
-          <>
-            {renderCustomerInfo()}
-            
-            <PaymentCashInput
-              order={order}
-              tipAmount={customers[currentCustomerIndex]?.tipAmount || 0}
-              calculateTotalWithTip={() => getCustomerTotalWithTip(customers[currentCustomerIndex]?.id)}
-              cashReceived={cashReceived}
-              setCashReceived={setCashReceived}
-              handleCashAmountSubmit={handleCustomerCashAmountSubmit}
-              setPaymentStatus={(status: PaymentStatus) => {
-                if (status === "idle") {
-                  setPaymentStatus("customer-payment");
-                } else {
-                  setPaymentStatus(status);
-                }
-              }}
-            />
-          </>
+          <CashInputContent
+            order={order}
+            tipAmount={customers[currentCustomerIndex]?.tipAmount || 0}
+            calculateTotalWithTip={() => getCustomerTotalWithTip(customers[currentCustomerIndex]?.id)}
+            cashReceived={cashReceived}
+            setCashReceived={setCashReceived}
+            handleCashAmountSubmit={handleCustomerCashAmountSubmit}
+            setPaymentStatus={setPaymentStatus}
+            paymentStatus={paymentStatus}
+            getCurrentCustomerName={getCurrentCustomerName}
+            currentCustomerIndex={currentCustomerIndex}
+            totalCustomers={customers.length}
+          />
         );
       
       case "customer-cash-change":
         return (
-          <>
-            {renderCustomerInfo()}
-            
-            <PaymentCashChange
-              order={order}
-              tipAmount={customers[currentCustomerIndex]?.tipAmount || 0}
-              cashReceived={cashReceived}
-              changeAmount={changeAmount}
-              calculateTotalWithTip={() => getCustomerTotalWithTip(customers[currentCustomerIndex]?.id)}
-              handleCashPaymentComplete={handleCashPaymentComplete}
-            />
-          </>
+          <CashChangeContent
+            order={order}
+            tipAmount={customers[currentCustomerIndex]?.tipAmount || 0}
+            cashReceived={cashReceived}
+            changeAmount={changeAmount}
+            calculateTotalWithTip={() => getCustomerTotalWithTip(customers[currentCustomerIndex]?.id)}
+            handleCashPaymentComplete={handleCashPaymentComplete}
+            paymentStatus={paymentStatus}
+            getCurrentCustomerName={getCurrentCustomerName}
+            currentCustomerIndex={currentCustomerIndex}
+            totalCustomers={customers.length}
+          />
         );
       
       case "split-bill":
