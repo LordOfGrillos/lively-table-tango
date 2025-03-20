@@ -4,7 +4,8 @@ import { PaymentMethods } from "../../PaymentMethods";
 import { Button } from "@/components/ui/button";
 import { CustomerInfo } from "../CustomerInfo";
 import { PaymentMethod } from "../../PaymentModal";
-import { CreditCard } from "lucide-react";
+import { CreditCard, Banknote, ArrowLeft, User } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface CustomerPaymentContentProps {
   selectedPaymentMethod: string;
@@ -37,17 +38,19 @@ export function CustomerPaymentContent({
 
   return (
     <>
-      <CustomerInfo 
-        paymentStatus="customer-payment"
-        customerName={customerName}
-        customerIndex={currentCustomerIndex}
-        totalCustomers={totalCustomers}
-      />
-      
-      <div className="bg-muted/30 rounded-lg p-3 mb-4 border">
-        <p className="font-semibold text-center text-lg text-app-purple">
-          Paying {customerName}'s Portion
-        </p>
+      <div className="bg-app-purple/10 rounded-lg p-4 mb-6 border border-app-purple/30">
+        <div className="flex items-center gap-3">
+          <div className="bg-app-purple rounded-full p-2">
+            <User className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">Now Processing Payment For:</p>
+            <p className="font-semibold text-lg text-app-purple">{customerName}</p>
+          </div>
+          <Badge variant="outline" className="ml-auto">
+            Customer {currentCustomerIndex + 1} of {totalCustomers}
+          </Badge>
+        </div>
       </div>
       
       <PaymentMethods
@@ -76,16 +79,29 @@ export function CustomerPaymentContent({
           <Button 
             variant="outline"
             onClick={() => setPaymentStatus("split-summary")}
+            className="flex items-center"
           >
+            <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Split Summary
           </Button>
-          <Button 
-            className="bg-app-purple hover:bg-app-purple/90 text-white"
-            onClick={handlePaymentSubmit}
-          >
-            <CreditCard className="mr-2 h-4 w-4" />
-            Process {customerName}'s Payment (${customerTotal.toFixed(2)})
-          </Button>
+          
+          {selectedPaymentMethod === "cash" ? (
+            <Button 
+              className="bg-green-600 hover:bg-green-700 text-white"
+              onClick={handlePaymentSubmit}
+            >
+              <Banknote className="mr-2 h-4 w-4" />
+              Process Cash Payment
+            </Button>
+          ) : (
+            <Button 
+              className="bg-app-purple hover:bg-app-purple/90 text-white"
+              onClick={handlePaymentSubmit}
+            >
+              <CreditCard className="mr-2 h-4 w-4" />
+              Process Card Payment
+            </Button>
+          )}
         </div>
       </div>
     </>

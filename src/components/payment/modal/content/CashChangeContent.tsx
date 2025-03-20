@@ -1,10 +1,10 @@
 
-import { Button } from "@/components/ui/button";
-import { DialogFooter } from "@/components/ui/dialog";
+import React from "react";
 import { Order } from "@/components/tables/TableActionPanel";
+import { Button } from "@/components/ui/button";
 import { CustomerInfo } from "../CustomerInfo";
-import { PaymentStatus } from "../../PaymentModal";
-import { Banknote, PiggyBank } from "lucide-react";
+import { ArrowRight, Check, User } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface CashChangeContentProps {
   order: Order;
@@ -13,7 +13,7 @@ interface CashChangeContentProps {
   changeAmount: number;
   calculateTotalWithTip: () => number;
   handleCashPaymentComplete: () => void;
-  paymentStatus: PaymentStatus;
+  paymentStatus: string;
   getCurrentCustomerName?: () => string;
   currentCustomerIndex?: number;
   totalCustomers?: number;
@@ -31,74 +31,60 @@ export function CashChangeContent({
   currentCustomerIndex,
   totalCustomers
 }: CashChangeContentProps) {
-  const totalAmount = calculateTotalWithTip();
-  
-  const isCustomerPayment = paymentStatus === "customer-cash-change";
-  const customerName = isCustomerPayment && getCurrentCustomerName ? getCurrentCustomerName() : "";
+  const total = calculateTotalWithTip();
+  const isForCustomer = paymentStatus === "customer-cash-change";
+  const customerName = isForCustomer && getCurrentCustomerName ? getCurrentCustomerName() : "";
 
   return (
-    <div className="py-4 space-y-4">
-      {isCustomerPayment && getCurrentCustomerName && currentCustomerIndex !== undefined && totalCustomers !== undefined && (
-        <CustomerInfo 
-          paymentStatus={paymentStatus}
-          customerName={customerName}
-          customerIndex={currentCustomerIndex}
-          totalCustomers={totalCustomers}
-        />
-      )}
-      
-      {isCustomerPayment && (
-        <div className="bg-muted/30 rounded-lg p-3 mb-4 border">
-          <p className="font-semibold text-center text-app-purple">
-            Completing Cash Payment for {customerName}
-          </p>
+    <div className="py-4 space-y-6">
+      {isForCustomer && getCurrentCustomerName && (
+        <div className="bg-app-purple/10 rounded-lg p-4 mb-2 border border-app-purple/30">
+          <div className="flex items-center gap-3">
+            <div className="bg-app-purple rounded-full p-2">
+              <User className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Cash Payment For:</p>
+              <p className="font-semibold text-lg text-app-purple">{customerName}</p>
+            </div>
+            {currentCustomerIndex !== undefined && totalCustomers && (
+              <Badge variant="outline" className="ml-auto">
+                Customer {currentCustomerIndex + 1} of {totalCustomers}
+              </Badge>
+            )}
+          </div>
         </div>
       )}
-      
-      <div className="space-y-3 text-center">
-        <div className="rounded-full bg-green-100 p-3 w-16 h-16 mx-auto flex items-center justify-center">
-          <PiggyBank className="h-8 w-8 text-green-600" />
+    
+      <div className="space-y-5">
+        <div className="text-center space-y-4">
+          <div>
+            <div className="text-sm text-muted-foreground">Total Paid:</div>
+            <div className="text-2xl font-semibold">${cashReceived}</div>
+          </div>
+          
+          <div>
+            <div className="text-sm text-muted-foreground">Total Due:</div>
+            <div className="text-2xl font-semibold">${total.toFixed(2)}</div>
+          </div>
+          
+          <div>
+            <div className="text-sm text-muted-foreground">Change Due:</div>
+            <div className="text-4xl font-bold text-green-600">${changeAmount.toFixed(2)}</div>
+          </div>
         </div>
         
-        <h3 className="text-xl font-medium mt-4">
-          {isCustomerPayment 
-            ? `Give ${customerName} their change`
-            : "Give change to customer"
-          }
-        </h3>
-        
-        <div className="text-center text-4xl font-bold my-6 text-green-600">
-          ${changeAmount.toFixed(2)}
-        </div>
-        
-        <div className="space-y-2 text-sm text-left bg-muted/20 p-4 rounded-lg">
-          <div className="flex justify-between">
-            <span>Total amount due:</span>
-            <span>${totalAmount.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Cash received:</span>
-            <span>${parseFloat(cashReceived).toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between font-medium">
-            <span>Change to give:</span>
-            <span>${changeAmount.toFixed(2)}</span>
-          </div>
+        <div className="flex justify-center pt-4">
+          <Button 
+            size="lg"
+            className="bg-green-600 hover:bg-green-700 px-8"
+            onClick={handleCashPaymentComplete}
+          >
+            <Check className="mr-2 h-5 w-5" />
+            {isForCustomer ? `Mark ${customerName}'s Payment Complete` : "Complete Cash Payment"}
+          </Button>
         </div>
       </div>
-      
-      <DialogFooter className="mt-6">
-        <Button
-          className="bg-green-600 hover:bg-green-700 w-full py-6 text-lg"
-          onClick={handleCashPaymentComplete}
-        >
-          <Banknote className="mr-2 h-5 w-5" />
-          {isCustomerPayment 
-            ? `Complete ${customerName}'s Payment`
-            : "Complete Payment"
-          }
-        </Button>
-      </DialogFooter>
     </div>
   );
 }

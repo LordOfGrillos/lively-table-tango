@@ -1,12 +1,11 @@
 
-import { useState, useEffect } from "react";
-import { DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import React, { useEffect } from "react";
 import { Order } from "@/components/tables/TableActionPanel";
+import { Button } from "@/components/ui/button";
 import { CustomerInfo } from "../CustomerInfo";
-import { PaymentStatus } from "../../PaymentModal";
-import { Banknote } from "lucide-react";
+import { ArrowLeft, User, Banknote } from "lucide-react";
+import { DollarSignInput } from "../../DollarSignInput";
+import { Badge } from "@/components/ui/badge";
 
 interface CashInputContentProps {
   order: Order;
@@ -16,7 +15,7 @@ interface CashInputContentProps {
   setCashReceived: (amount: string) => void;
   handleCashAmountSubmit: () => void;
   setPaymentStatus: (status: string) => void;
-  paymentStatus: PaymentStatus;
+  paymentStatus: string;
   getCurrentCustomerName?: () => string;
   currentCustomerIndex?: number;
   totalCustomers?: number;
@@ -35,103 +34,86 @@ export function CashInputContent({
   currentCustomerIndex,
   totalCustomers
 }: CashInputContentProps) {
-  const [isValid, setIsValid] = useState(false);
-  const totalAmount = calculateTotalWithTip();
+  const total = calculateTotalWithTip();
+  const isForCustomer = paymentStatus === "customer-cash-input";
+  const customerName = isForCustomer && getCurrentCustomerName ? getCurrentCustomerName() : "";
   
-  const isCustomerPayment = paymentStatus === "customer-cash-input";
-  const customerName = isCustomerPayment && getCurrentCustomerName ? getCurrentCustomerName() : "";
-
+  // Set initial cash amount to match the total
   useEffect(() => {
-    const parsedCash = parseFloat(cashReceived);
-    setIsValid(!isNaN(parsedCash) && parsedCash >= totalAmount);
-  }, [cashReceived, totalAmount]);
-
-  const presetAmounts = [
-    totalAmount,
-    Math.ceil(totalAmount / 5) * 5,
-    Math.ceil(totalAmount / 10) * 10,
-    Math.ceil(totalAmount / 20) * 20
-  ].filter((amount, index, self) => self.indexOf(amount) === index).sort((a, b) => a - b);
+    if (!cashReceived) {
+      setCashReceived(total.toFixed(2));
+    }
+  }, [total, cashReceived, setCashReceived]);
 
   return (
     <div className="py-4 space-y-4">
-      {isCustomerPayment && getCurrentCustomerName && currentCustomerIndex !== undefined && totalCustomers !== undefined && (
-        <CustomerInfo 
-          paymentStatus={paymentStatus}
-          customerName={customerName}
-          customerIndex={currentCustomerIndex}
-          totalCustomers={totalCustomers}
-        />
-      )}
-      
-      {isCustomerPayment && (
-        <div className="bg-muted/30 rounded-lg p-3 mb-4 border">
-          <p className="font-semibold text-center text-app-purple">
-            Processing Cash Payment for {customerName}
-          </p>
+      {isForCustomer && getCurrentCustomerName && (
+        <div className="bg-app-purple/10 rounded-lg p-4 mb-2 border border-app-purple/30">
+          <div className="flex items-center gap-3">
+            <div className="bg-app-purple rounded-full p-2">
+              <User className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Cash Payment For:</p>
+              <p className="font-semibold text-lg text-app-purple">{customerName}</p>
+            </div>
+            {currentCustomerIndex !== undefined && totalCustomers && (
+              <Badge variant="outline" className="ml-auto">
+                Customer {currentCustomerIndex + 1} of {totalCustomers}
+              </Badge>
+            )}
+          </div>
         </div>
       )}
-      
-      <div className="space-y-3">
-        <h3 className="text-lg font-medium">
-          {isCustomerPayment 
-            ? `Enter Cash Amount for ${customerName}`
-            : "Enter Cash Amount"
-          }
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          Enter the amount of cash received
-        </p>
+    
+      <div className="space-y-4">
+        <div className="text-center">
+          <div className="text-3xl font-bold text-green-600">${total.toFixed(2)}</div>
+          <div className="text-sm text-muted-foreground mt-1">
+            {isForCustomer ? `${customerName}'s Total Amount Due` : "Total Amount Due"}
+          </div>
+        </div>
         
-        <div className="flex gap-2 items-center">
-          <span className="text-lg font-semibold">$</span>
-          <Input
-            type="number"
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span>Subtotal:</span>
+            <span>${(total - tipAmount).toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span>Tip:</span>
+            <span>${tipAmount.toFixed(2)}</span>
+          </div>
+        </div>
+        
+        <div className="pt-4 border-t">
+          <label className="text-sm font-medium block mb-2">Cash Received:</label>
+          <DollarSignInput
             value={cashReceived}
-            onChange={(e) => setCashReceived(e.target.value)}
+            onChange={setCashReceived}
             placeholder="0.00"
-            className="text-xl font-bold"
+            className="text-2xl font-bold text-center"
           />
         </div>
         
-        <div className="text-sm text-muted-foreground flex justify-between">
-          <span>Total amount to be paid:</span>
-          <span className="font-medium">${totalAmount.toFixed(2)}</span>
-        </div>
-        
-        <div className="grid grid-cols-4 gap-2 mt-4">
-          {presetAmounts.map((amount) => (
-            <Button
-              key={amount}
-              variant="outline"
-              onClick={() => setCashReceived(amount.toString())}
-              className="text-md"
-            >
-              ${amount.toFixed(2)}
-            </Button>
-          ))}
+        <div className="flex justify-end gap-2 pt-4">
+          <Button 
+            variant="outline"
+            onClick={() => setPaymentStatus(isForCustomer ? "customer-payment" : "idle")}
+            className="flex items-center"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <Button 
+            className="bg-green-600 hover:bg-green-700"
+            onClick={handleCashAmountSubmit}
+            disabled={parseFloat(cashReceived) < total}
+          >
+            <Banknote className="mr-2 h-4 w-4" />
+            Calculate Change
+          </Button>
         </div>
       </div>
-      
-      <DialogFooter className="flex justify-between mt-6">
-        <Button
-          variant="outline"
-          onClick={() => setPaymentStatus(isCustomerPayment ? "split-summary" : "idle")}
-        >
-          Back
-        </Button>
-        <Button
-          className="bg-app-purple hover:bg-app-purple/90"
-          onClick={handleCashAmountSubmit}
-          disabled={!isValid}
-        >
-          <Banknote className="mr-2 h-4 w-4" />
-          {isCustomerPayment 
-            ? `Process ${customerName}'s Cash Payment`
-            : "Process Cash Payment"
-          }
-        </Button>
-      </DialogFooter>
     </div>
   );
 }

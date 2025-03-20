@@ -16,7 +16,8 @@ export type PaymentStatus =
   | "split-summary" 
   | "customer-payment" 
   | "customer-cash-input" 
-  | "customer-cash-change";
+  | "customer-cash-change"
+  | "customer-success";
 
 export interface PaymentMethod {
   id: string;
@@ -83,16 +84,14 @@ export function PaymentModal({ open, onClose, order, onPaymentComplete }: Paymen
     isItemAssignedToCustomer,
     getRemainingAmount,
     getCustomerTotalWithTip,
+    getCurrentCustomerName,
+    handleReturnToSplitSummary
   } = usePaymentState(order, onPaymentComplete);
 
   const handleClose = () => {
     if (paymentStatus === "idle" || paymentStatus === "success") {
       onClose();
     }
-  };
-
-  const getCurrentCustomerName = () => {
-    return customers[currentCustomerIndex]?.name || "";
   };
 
   return (
@@ -145,6 +144,7 @@ export function PaymentModal({ open, onClose, order, onPaymentComplete }: Paymen
           setPaymentStatus={setPaymentStatus}
           splitType={splitType}
           numberOfCustomers={numberOfCustomers}
+          handleReturnToSplitSummary={handleReturnToSplitSummary}
         />
       </DialogContent>
     </Dialog>

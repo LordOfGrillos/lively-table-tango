@@ -1,35 +1,64 @@
 
 import React from "react";
-import { DialogTitle } from "@/components/ui/dialog";
 import { PaymentStatus } from "../PaymentModal";
-import { CustomerBadge } from "./CustomerBadge";
+import { CreditCard, SplitSquareVertical, User } from "lucide-react";
 
 interface ModalTitleProps {
   paymentStatus: PaymentStatus;
-  getCurrentCustomerName: () => string;
+  getCurrentCustomerName?: () => string;
 }
 
 export function ModalTitle({ paymentStatus, getCurrentCustomerName }: ModalTitleProps) {
-  const getTitle = () => {
-    switch (paymentStatus) {
-      case "idle": return "Payment";
-      case "processing": return "Processing Payment";
-      case "success": return "Payment Successful";
-      case "cash-input": return "Cash Payment";
-      case "cash-change": return "Change Due";
-      case "split-bill": return "Split Bill";
-      case "split-summary": return "Payment Summary";
-      case "customer-payment": return `Payment for ${getCurrentCustomerName()}`;
-      case "customer-cash-input": return `${getCurrentCustomerName()}'s Cash Payment`;
-      case "customer-cash-change": return `${getCurrentCustomerName()}'s Change Due`;
-      default: return "Payment";
-    }
-  };
-
+  if (paymentStatus === "processing") {
+    return <h2 className="text-xl font-semibold">Processing Payment</h2>;
+  }
+  
+  if (paymentStatus === "success") {
+    return <h2 className="text-xl font-semibold">Payment Complete</h2>;
+  }
+  
+  if (paymentStatus === "customer-success") {
+    const customerName = getCurrentCustomerName ? getCurrentCustomerName() : "";
+    return (
+      <h2 className="text-xl font-semibold flex items-center">
+        <User className="h-5 w-5 mr-2 text-green-600" />
+        {customerName}'s Payment Complete
+      </h2>
+    );
+  }
+  
+  if (paymentStatus === "split-bill") {
+    return (
+      <h2 className="text-xl font-semibold flex items-center">
+        <SplitSquareVertical className="h-5 w-5 mr-2 text-app-purple" />
+        Split Bill
+      </h2>
+    );
+  }
+  
+  if (paymentStatus === "split-summary") {
+    return (
+      <h2 className="text-xl font-semibold flex items-center">
+        <SplitSquareVertical className="h-5 w-5 mr-2 text-app-purple" />
+        Split Bill Summary
+      </h2>
+    );
+  }
+  
+  if (paymentStatus.startsWith("customer-")) {
+    const customerName = getCurrentCustomerName ? getCurrentCustomerName() : "";
+    return (
+      <h2 className="text-xl font-semibold flex items-center">
+        <User className="h-5 w-5 mr-2 text-app-purple" />
+        {customerName}'s Payment
+      </h2>
+    );
+  }
+  
   return (
-    <div className="flex items-center">
-      <DialogTitle>{getTitle()}</DialogTitle>
-      <CustomerBadge paymentStatus={paymentStatus} customerName={getCurrentCustomerName()} />
-    </div>
+    <h2 className="text-xl font-semibold flex items-center">
+      <CreditCard className="h-5 w-5 mr-2" />
+      Payment
+    </h2>
   );
 }

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Order } from "@/components/tables/TableActionPanel";
 import { PaymentStatus } from "./PaymentModal";
@@ -60,6 +61,14 @@ export function usePaymentState(order: Order, onPaymentComplete: (paymentMethod:
     }
   }, [customers.length]);
 
+  // Reset cash received when customer changes
+  useEffect(() => {
+    if (paymentStatus === "customer-payment" || paymentStatus === "customer-cash-input") {
+      const customerTotal = getCurrentCustomerTotal();
+      setCashReceived(customerTotal.toFixed(2));
+    }
+  }, [currentCustomerIndex, paymentStatus]);
+
   const getCurrentCustomerName = (): string => {
     if (customers.length > currentCustomerIndex) {
       const name = customers[currentCustomerIndex].name;
@@ -81,15 +90,15 @@ export function usePaymentState(order: Order, onPaymentComplete: (paymentMethod:
         setPaymentStatus("processing");
         
         setTimeout(() => {
-          setPaymentStatus("success");
+          setPaymentStatus("customer-success");
           
           setTimeout(() => {
             const newCustomersPaid = [...customersPaid];
             newCustomersPaid[currentCustomerIndex] = true;
             setCustomersPaid(newCustomersPaid);
             setPaymentStatus("split-summary");
-          }, 1500);
-        }, 2000);
+          }, 2000);
+        }, 1500);
       }
     } else {
       handleSinglePaymentSubmit();
@@ -101,7 +110,11 @@ export function usePaymentState(order: Order, onPaymentComplete: (paymentMethod:
       const newCustomersPaid = [...customersPaid];
       newCustomersPaid[currentCustomerIndex] = true;
       setCustomersPaid(newCustomersPaid);
-      setPaymentStatus("split-summary");
+      setPaymentStatus("customer-success");
+      
+      setTimeout(() => {
+        setPaymentStatus("split-summary");
+      }, 2000);
     } else {
       handleSingleCashPaymentComplete();
     }
@@ -130,6 +143,10 @@ export function usePaymentState(order: Order, onPaymentComplete: (paymentMethod:
       return customers[currentCustomerIndex].tipAmount;
     }
     return 0;
+  };
+
+  const handleReturnToSplitSummary = () => {
+    setPaymentStatus("split-summary");
   };
 
   return {
@@ -173,5 +190,6 @@ export function usePaymentState(order: Order, onPaymentComplete: (paymentMethod:
     getRemainingAmount,
     getCustomerTotalWithTip,
     getCurrentCustomerName,
+    handleReturnToSplitSummary,
   };
 }

@@ -3,9 +3,7 @@ import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
 import { SplitCustomer } from "./PaymentModal";
 import { Badge } from "@/components/ui/badge";
-import { User, CreditCard, Check, Banknote } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { useState } from "react";
+import { User, CreditCard, Check, Banknote, ArrowRight } from "lucide-react";
 
 interface PaymentSplitSummaryProps {
   customers: SplitCustomer[];
@@ -31,9 +29,9 @@ export function PaymentSplitSummary({
   return (
     <div className="py-4 space-y-4">
       <div className="space-y-2">
-        <h3 className="text-lg font-medium">Split Bill Payment Summary</h3>
+        <h3 className="text-lg font-medium">Split Bill Summary</h3>
         <p className="text-sm text-muted-foreground">
-          Each customer's portion can be paid separately
+          Select a customer to process their payment
         </p>
       </div>
       
@@ -43,11 +41,14 @@ export function PaymentSplitSummary({
           const total = getCustomerTotalWithTip(customer.id);
           
           return (
-            <div key={customer.id} className={`p-4 ${isPaid ? 'bg-green-50' : ''}`}>
+            <div 
+              key={customer.id} 
+              className={`p-4 ${isPaid ? 'bg-green-50' : ''} ${!isPaid ? 'hover:bg-slate-50' : ''}`}
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="bg-app-purple/10 rounded-full p-1.5">
-                    <User className="h-4 w-4 text-app-purple" />
+                  <div className={`rounded-full p-1.5 ${isPaid ? 'bg-green-100' : 'bg-app-purple/10'}`}>
+                    <User className={`h-4 w-4 ${isPaid ? 'text-green-600' : 'text-app-purple'}`} />
                   </div>
                   <span className="font-medium">{customer.name}</span>
                   {isPaid && (
@@ -68,24 +69,13 @@ export function PaymentSplitSummary({
                 </div>
                 
                 {!isPaid && (
-                  <div className="flex gap-2">
-                    <Button 
-                      onClick={() => handlePayCustomer(index)}
-                      size="sm"
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      <Banknote className="mr-2 h-4 w-4" />
-                      Cash
-                    </Button>
-                    <Button 
-                      onClick={() => handlePayCustomer(index)}
-                      size="sm"
-                      className="bg-app-purple hover:bg-app-purple/90"
-                    >
-                      <CreditCard className="mr-2 h-4 w-4" />
-                      Card
-                    </Button>
-                  </div>
+                  <Button 
+                    onClick={() => handlePayCustomer(index)}
+                    size="sm"
+                    className="bg-app-purple hover:bg-app-purple/90"
+                  >
+                    Pay for {customer.name} <ArrowRight className="ml-1 h-4 w-4" />
+                  </Button>
                 )}
               </div>
             </div>

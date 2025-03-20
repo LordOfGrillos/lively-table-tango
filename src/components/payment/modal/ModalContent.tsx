@@ -51,6 +51,7 @@ interface ModalContentProps {
   setPaymentStatus: (status: PaymentStatus) => void;
   splitType: "equal" | "custom";
   numberOfCustomers: number;
+  handleReturnToSplitSummary?: () => void;
 }
 
 export function ModalContent({
@@ -92,7 +93,8 @@ export function ModalContent({
   getCustomerTotalWithTip,
   setPaymentStatus,
   splitType,
-  numberOfCustomers
+  numberOfCustomers,
+  handleReturnToSplitSummary
 }: ModalContentProps) {
   
   const renderContentByStatus = () => {
@@ -123,7 +125,18 @@ export function ModalContent({
           <PaymentSuccess
             tipAmount={tipAmount}
             calculateTotalWithTip={calculateTotalWithTip}
-            customerName={paymentStatus.startsWith("customer") ? getCurrentCustomerName() : undefined}
+          />
+        );
+        
+      case "customer-success":
+        return (
+          <PaymentSuccess
+            tipAmount={customers[currentCustomerIndex]?.tipAmount || 0}
+            calculateTotalWithTip={() => getCustomerTotalWithTip(customers[currentCustomerIndex]?.id)}
+            customerName={getCurrentCustomerName()}
+            currentCustomerIndex={currentCustomerIndex}
+            totalCustomers={customers.length}
+            handleComplete={handleReturnToSplitSummary}
           />
         );
       
