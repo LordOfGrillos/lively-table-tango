@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { toast } from "sonner";
 
@@ -99,6 +98,8 @@ const mockCategories: InventoryCategory[] = [
   { id: "cat-4", name: "Dry Goods", description: "Pasta, rice, and grains", itemCount: 6 },
   { id: "cat-5", name: "Beverages", description: "Drinks and beverage ingredients", itemCount: 4 },
   { id: "cat-6", name: "Cleaning", description: "Cleaning supplies", itemCount: 2 },
+  { id: "cat-7", name: "Spices", description: "Herbs, spices, and seasonings", itemCount: 4 },
+  { id: "cat-8", name: "Bakery", description: "Bread and baked goods", itemCount: 3 },
 ];
 
 const mockItems: InventoryItem[] = [
@@ -190,6 +191,135 @@ const mockItems: InventoryItem[] = [
     ],
     supplier: "Coffee Importers Inc.",
   },
+  {
+    id: "item-5",
+    name: "Olive Oil (Extra Virgin)",
+    type: "ingredient",
+    category: "Dry Goods",
+    currentStock: 12,
+    unit: "l",
+    minStockLevel: 5,
+    cost: 12.99,
+    imageSrc: "/placeholder.svg",
+    status: "in-stock",
+    expiryDate: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000), // 120 days from now
+    lastRestocked: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000), // 15 days ago
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    location: "Pantry Shelf C",
+    usedInRecipes: [
+      { menuItemId: "menu-8", menuItemName: "Mediterranean Salad", quantityUsed: 0.03 },
+      { menuItemId: "menu-9", menuItemName: "Pasta Aglio e Olio", quantityUsed: 0.05 },
+    ],
+    supplier: "Italian Imports",
+    notes: "Premium quality Italian olive oil, cold-pressed",
+  },
+  {
+    id: "item-6",
+    name: "Paper Napkins",
+    type: "supply",
+    category: "Cleaning",
+    currentStock: 500,
+    unit: "pcs",
+    minStockLevel: 200,
+    cost: 0.02,
+    imageSrc: "/placeholder.svg",
+    status: "in-stock",
+    lastRestocked: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000), // 20 days ago
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    location: "Storage Room B",
+    usedInRecipes: [],
+    supplier: "Restaurant Supplies Co.",
+    barcode: "SUP-NAP-1234",
+  },
+  {
+    id: "item-7",
+    name: "Espresso Machine",
+    type: "equipment",
+    category: "Beverages",
+    currentStock: 1,
+    unit: "pcs",
+    minStockLevel: 1,
+    cost: 1599.99,
+    imageSrc: "/placeholder.svg",
+    status: "in-stock",
+    lastRestocked: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000), // 180 days ago
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    location: "Bar Counter",
+    usedInRecipes: [],
+    supplier: "Professional Kitchen Equipment",
+    barcode: "EQP-ESP-8765",
+    notes: "Model: Barista Pro 3000, Last maintenance: 2 weeks ago",
+  },
+  {
+    id: "item-8",
+    name: "Cinnamon Powder",
+    type: "ingredient",
+    category: "Spices",
+    currentStock: 0.3,
+    unit: "kg",
+    minStockLevel: 0.5,
+    cost: 8.50,
+    imageSrc: "/placeholder.svg",
+    status: "low-stock",
+    expiryDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days from now
+    lastRestocked: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000), // 45 days ago
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    location: "Spice Rack",
+    usedInRecipes: [
+      { menuItemId: "menu-10", menuItemName: "Apple Pie", quantityUsed: 0.01 },
+      { menuItemId: "menu-11", menuItemName: "Cinnamon Roll", quantityUsed: 0.015 },
+    ],
+    supplier: "Global Spice Traders",
+  },
+  {
+    id: "item-9",
+    name: "Sourdough Bread",
+    type: "ingredient",
+    category: "Bakery",
+    currentStock: 0,
+    unit: "kg",
+    minStockLevel: 5,
+    cost: 4.99,
+    imageSrc: "/placeholder.svg",
+    status: "out-of-stock",
+    expiryDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago (expired)
+    lastRestocked: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    location: "Bakery Display",
+    usedInRecipes: [
+      { menuItemId: "menu-12", menuItemName: "Avocado Toast", quantityUsed: 0.1 },
+      { menuItemId: "menu-13", menuItemName: "Grilled Cheese Sandwich", quantityUsed: 0.2 },
+    ],
+    supplier: "Local Bakery",
+    notes: "Fresh delivered daily, order by 6 PM for next day",
+  },
+  {
+    id: "item-10",
+    name: "Fresh Basil",
+    type: "ingredient",
+    category: "Produce",
+    currentStock: 0.8,
+    unit: "kg",
+    minStockLevel: 1,
+    cost: 12.99,
+    imageSrc: "/placeholder.svg",
+    status: "low-stock",
+    expiryDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 2 days from now
+    lastRestocked: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    location: "Herb Refrigerator",
+    usedInRecipes: [
+      { menuItemId: "menu-14", menuItemName: "Margherita Pizza", quantityUsed: 0.02 },
+      { menuItemId: "menu-15", menuItemName: "Caprese Salad", quantityUsed: 0.03 },
+    ],
+    supplier: "Herb Gardens Inc.",
+  }
 ];
 
 const mockTransactions: InventoryTransaction[] = [

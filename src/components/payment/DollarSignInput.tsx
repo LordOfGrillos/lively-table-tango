@@ -31,12 +31,15 @@ export function DollarSignInput({
     onChange(formattedValue);
   };
 
+  // Format displayed value to always show 2 decimal places when focused out
+  const displayValue = value === '' ? '' : value.includes('.') ? value : `${value}.00`;
+
   return (
     <div className="relative w-full">
       <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</div>
       <Input
         type="text"
-        value={value}
+        value={displayValue}
         onChange={handleChange}
         placeholder={placeholder || "0.00"}
         className={cn("pl-8", className)}
