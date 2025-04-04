@@ -9,6 +9,7 @@ import { PermissionSelector } from "./PermissionSelector";
 import { StepIndicator } from "./StepIndicator";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { Form } from "@/components/ui/form";
 
 interface RoleEditProps {
   roleId?: string; // If undefined, it's a new role
@@ -92,26 +93,28 @@ export function RoleEdit({ roleId, onSave, onCancel }: RoleEditProps) {
       <div className="py-4 space-y-6">
         {/* Step 1: Basic role information */}
         {currentStep === 1 && (
-          <form className="space-y-6">
-            <RoleFormBasic form={form} />
+          <Form {...form}>
+            <form className="space-y-6">
+              <RoleFormBasic form={form} />
 
-            <div className="flex justify-end">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={onCancel}
-              >
-                Cancelar
-              </Button>
-              <Button 
-                type="button"
-                className="ml-2 bg-app-purple hover:bg-app-purple/90"
-                onClick={nextStep}
-              >
-                Continuar a Permisos
-              </Button>
-            </div>
-          </form>
+              <div className="flex justify-end">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={onCancel}
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  type="button"
+                  className="ml-2 bg-app-purple hover:bg-app-purple/90"
+                  onClick={nextStep}
+                >
+                  Continuar a Permisos
+                </Button>
+              </div>
+            </form>
+          </Form>
         )}
 
         {/* Step 2: Permission selection */}
