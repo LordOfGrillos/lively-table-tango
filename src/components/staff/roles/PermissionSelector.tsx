@@ -11,7 +11,7 @@ import { AlertTriangle, HelpCircle, Info, ShieldCheck, Check, ChevronDown, Chevr
 
 interface PermissionSelectorProps {
   selectedPermissions: string[];
-  setSelectedPermissions: (permissions: string[]) => void;
+  setSelectedPermissions: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 export function PermissionSelector({ 
@@ -44,10 +44,10 @@ export function PermissionSelector({
   }, [selectedPermissions, permissions.length]);
 
   const togglePermission = (permissionId: string) => {
-    setSelectedPermissions(
-      selectedPermissions.includes(permissionId)
-        ? selectedPermissions.filter((id) => id !== permissionId)
-        : [...selectedPermissions, permissionId]
+    setSelectedPermissions(prev => 
+      prev.includes(permissionId)
+        ? prev.filter((id) => id !== permissionId)
+        : [...prev, permissionId]
     );
   };
 
@@ -57,7 +57,7 @@ export function PermissionSelector({
       selectedPermissions.includes(id)
     );
 
-    setSelectedPermissions((prev) => {
+    setSelectedPermissions(prev => {
       if (allSelected) {
         return prev.filter((id) => !categoryPermissions.includes(id));
       } else {
