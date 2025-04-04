@@ -106,7 +106,7 @@ export function Sidebar() {
         <SidebarItem 
           icon={LayoutGrid} 
           label="Table Management"
-          active={pathname === '/' && pathname !== '/inventory' && pathname !== '/staff'}
+          active={pathname === '/' && pathname.indexOf('/inventory') === -1 && pathname.indexOf('/staff') === -1}
           onClick={() => navigate('/')}
         />
         <SidebarItem 
