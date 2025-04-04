@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useStaff, Role } from "./StaffContext";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Edit, Trash, Plus, Copy, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { RoleEdit } from "./RoleEdit";
+import { RoleEdit } from "./roles/RoleEdit";
 import { format } from "date-fns";
 
 export function RolesList() {
