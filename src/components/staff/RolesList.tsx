@@ -17,22 +17,18 @@ export function RolesList() {
   const [isCreating, setIsCreating] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  // Filtramos los roles según la búsqueda
   const filteredRoles = roles.filter(
     (role) =>
       role.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       role.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Duplicar rol
   const handleDuplicate = (role: Role) => {
     setEditingRole(null);
     setIsCreating(true);
-    // La lógica de duplicación se implementa en RoleEdit
     toast.success(`Rol "${role.name}" duplicado. Modifica los detalles antes de guardar.`);
   };
 
-  // Eliminar rol
   const handleDelete = (id: string) => {
     const success = deleteRole(id);
     if (success) {
@@ -43,7 +39,6 @@ export function RolesList() {
     }
   };
 
-  // Si no hay roles
   if (roles.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 space-y-4">
@@ -67,7 +62,6 @@ export function RolesList() {
 
   return (
     <div className="space-y-4">
-      {/* Barra de búsqueda y botón de crear */}
       <div className="flex flex-col sm:flex-row gap-4 items-center">
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
@@ -87,7 +81,6 @@ export function RolesList() {
         </Button>
       </div>
 
-      {/* Lista de roles */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredRoles.length === 0 ? (
           <div className="col-span-full text-center py-10 text-gray-500">
@@ -146,10 +139,9 @@ export function RolesList() {
         )}
       </div>
 
-      {/* Diálogo para editar rol */}
       {editingRole && (
         <Dialog open={!!editingRole} onOpenChange={() => setEditingRole(null)}>
-          <DialogContent className="sm:max-w-2xl">
+          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden">
             <RoleEdit 
               roleId={editingRole} 
               onSave={() => setEditingRole(null)}
@@ -159,10 +151,9 @@ export function RolesList() {
         </Dialog>
       )}
 
-      {/* Diálogo para crear nuevo rol */}
       {isCreating && (
         <Dialog open={isCreating} onOpenChange={() => setIsCreating(false)}>
-          <DialogContent className="sm:max-w-2xl">
+          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden">
             <RoleEdit 
               onSave={() => setIsCreating(false)}
               onCancel={() => setIsCreating(false)}
@@ -171,7 +162,6 @@ export function RolesList() {
         </Dialog>
       )}
 
-      {/* Diálogo de confirmación para eliminar */}
       {deleteConfirm && (
         <Dialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
           <DialogContent className="sm:max-w-md">

@@ -83,77 +83,81 @@ export function RoleEdit({ roleId, onSave, onCancel }: RoleEditProps) {
   };
 
   return (
-    <>
-      <DialogHeader>
+    <div className="max-h-[80vh] overflow-hidden flex flex-col">
+      <DialogHeader className="pb-2">
         <DialogTitle>{roleId ? "Editar Rol" : "Crear Nuevo Rol"}</DialogTitle>
       </DialogHeader>
 
       <StepIndicator currentStep={currentStep} totalSteps={2} />
 
-      <div className="py-4 space-y-6">
+      <div className="flex-1 overflow-y-auto py-2 space-y-4 pr-1">
         {/* Step 1: Basic role information */}
         {currentStep === 1 && (
           <Form {...form}>
-            <form className="space-y-6">
+            <form className="space-y-4">
               <RoleFormBasic form={form} />
-
-              <div className="flex justify-end">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={onCancel}
-                >
-                  Cancelar
-                </Button>
-                <Button 
-                  type="button"
-                  className="ml-2 bg-app-purple hover:bg-app-purple/90"
-                  onClick={nextStep}
-                >
-                  Continuar a Permisos
-                </Button>
-              </div>
             </form>
           </Form>
         )}
 
         {/* Step 2: Permission selection */}
         {currentStep === 2 && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <PermissionSelector 
               selectedPermissions={selectedPermissions}
               setSelectedPermissions={setSelectedPermissions}
             />
-
-            <DialogFooter className="pt-4 flex flex-col-reverse sm:flex-row sm:justify-between sm:space-x-2">
-              <div className="flex justify-start space-x-2 mt-4 sm:mt-0">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={onCancel}
-                >
-                  Cancelar
-                </Button>
-                <Button 
-                  type="button"
-                  variant="outline"
-                  onClick={prevStep}
-                >
-                  Volver
-                </Button>
-              </div>
-              <Button 
-                type="button"
-                className="bg-app-purple hover:bg-app-purple/90 w-full sm:w-auto"
-                onClick={() => handleSubmit(form.getValues())}
-                disabled={selectedPermissions.length === 0}
-              >
-                {roleId ? "Guardar cambios" : "Crear rol"}
-              </Button>
-            </DialogFooter>
           </div>
         )}
       </div>
-    </>
+
+      <div className="pt-4 border-t mt-4">
+        {currentStep === 1 ? (
+          <div className="flex justify-end space-x-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onCancel}
+            >
+              Cancelar
+            </Button>
+            <Button 
+              type="button"
+              className="bg-app-purple hover:bg-app-purple/90"
+              onClick={nextStep}
+            >
+              Continuar a Permisos
+            </Button>
+          </div>
+        ) : (
+          <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-between sm:space-x-2">
+            <div className="flex justify-start space-x-2 mt-4 sm:mt-0">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={onCancel}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                type="button"
+                variant="outline"
+                onClick={prevStep}
+              >
+                Volver
+              </Button>
+            </div>
+            <Button 
+              type="button"
+              className="bg-app-purple hover:bg-app-purple/90 w-full sm:w-auto"
+              onClick={() => handleSubmit(form.getValues())}
+              disabled={selectedPermissions.length === 0}
+            >
+              {roleId ? "Guardar cambios" : "Crear rol"}
+            </Button>
+          </DialogFooter>
+        )}
+      </div>
+    </div>
   );
 }

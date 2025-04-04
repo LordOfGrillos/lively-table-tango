@@ -44,7 +44,7 @@ export function PermissionSelector({
   }, [selectedPermissions, permissions.length]);
 
   const togglePermission = (permissionId: string) => {
-    setSelectedPermissions(prev => 
+    setSelectedPermissions((prev: string[]) => 
       prev.includes(permissionId)
         ? prev.filter((id) => id !== permissionId)
         : [...prev, permissionId]
@@ -57,7 +57,7 @@ export function PermissionSelector({
       selectedPermissions.includes(id)
     );
 
-    setSelectedPermissions(prev => {
+    setSelectedPermissions((prev: string[]) => {
       if (allSelected) {
         return prev.filter((id) => !categoryPermissions.includes(id));
       } else {
@@ -75,8 +75,8 @@ export function PermissionSelector({
   };
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="border shadow-sm">
+      <CardHeader className="pb-3">
         <div className="flex justify-between items-start">
           <div>
             <CardTitle className="text-lg flex items-center gap-2">
@@ -93,8 +93,8 @@ export function PermissionSelector({
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="pb-4">
+      <CardContent className="space-y-3 pb-3">
+        <div className="pb-2">
           <div className="flex items-center justify-between mb-2">
             <div className="text-sm text-gray-500 flex items-center gap-2">
               <HelpCircle className="h-4 w-4" />
@@ -124,13 +124,13 @@ export function PermissionSelector({
         </div>
 
         {selectedPermissions.length === 0 && (
-          <div className="flex items-center p-4 mb-4 text-sm text-amber-800 rounded-lg bg-amber-50">
+          <div className="flex items-center p-3 mb-2 text-sm text-amber-800 rounded-lg bg-amber-50">
             <AlertTriangle className="h-4 w-4 mr-2 flex-shrink-0" />
             <span>Selecciona al menos un permiso para poder guardar el rol.</span>
           </div>
         )}
 
-        <div className="border rounded-md">
+        <div className="border rounded-md max-h-[45vh] overflow-y-auto">
           {Object.entries(permissionsByCategory).map(([category, categoryPermissions]) => {
             const isCategoryExpanded = expandedCategories.includes(category);
             const allCategorySelected = categoryPermissions.every((p) =>
@@ -210,7 +210,7 @@ export function PermissionSelector({
                           </Label>
                           <div className="relative group">
                             <Info className="h-4 w-4 text-gray-400 cursor-help" />
-                            <div className="absolute right-0 top-6 z-50 w-72 p-3 bg-white border rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity">
+                            <div className="absolute right-0 top-6 z-50 w-64 p-2 bg-white border rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity">
                               <p className="text-sm text-gray-600">
                                 {permission.description}
                               </p>
