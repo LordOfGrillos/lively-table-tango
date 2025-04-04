@@ -1,6 +1,6 @@
 
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, Home, ShoppingCart, Users, Clock, FileText, Settings, LayoutGrid, Package } from "lucide-react";
+import { ChevronDown, Home, ShoppingCart, Users, Clock, FileText, Settings, LayoutGrid, Package, UserCog } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -73,6 +73,7 @@ const SidebarSubmenu = ({ isOpen, items }: SidebarSubmenuProps) => {
 
 export function Sidebar() {
   const navigate = useNavigate();
+  const pathname = window.location.pathname;
   
   return (
     <div className="w-64 border-r border-gray-200 h-screen flex flex-col p-4">
@@ -99,11 +100,13 @@ export function Sidebar() {
         <SidebarItem 
           icon={Home} 
           label="Dashboard" 
+          active={pathname === '/'}
           onClick={() => navigate('/')}
         />
         <SidebarItem 
           icon={LayoutGrid} 
           label="Table Management"
+          active={pathname === '/' && pathname !== '/inventory' && pathname !== '/staff'}
           onClick={() => navigate('/')}
         />
         <SidebarItem 
@@ -123,7 +126,14 @@ export function Sidebar() {
         <SidebarItem 
           icon={Package} 
           label="Inventory" 
+          active={pathname === '/inventory'}
           onClick={() => navigate('/inventory')}
+        />
+        <SidebarItem 
+          icon={UserCog} 
+          label="Personal y Roles" 
+          active={pathname === '/staff'}
+          onClick={() => navigate('/staff')}
         />
         <SidebarItem icon={Users} label="Master Data" hasSubmenu />
         <SidebarItem icon={Clock} label="Sales Transaction" />
