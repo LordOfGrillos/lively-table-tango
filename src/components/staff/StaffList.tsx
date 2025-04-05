@@ -1,7 +1,6 @@
-
 import { useState } from "react";
 import { useStaff } from "./StaffContext";
-import { Search, Filter, ArrowUpDown, Edit, Trash, AlertCircle } from "lucide-react";
+import { Search, Filter, ArrowUpDown, Edit, Trash, AlertCircle, UserCog, Activity } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,13 +26,21 @@ import {
 import { StaffMemberDetail } from "./StaffMemberDetail";
 import { StaffMemberEdit } from "./StaffMemberEdit";
 import { toast } from "sonner";
+import { QuickEditDialog } from "./QuickEditDialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface StaffListProps {
   onAddEmployee: () => void;
 }
 
 export function StaffList({ onAddEmployee }: StaffListProps) {
-  const { staff, getRoleById, getBranchById, deleteStaffMember } = useStaff();
+  const { staff, getRoleById, getBranchById, deleteStaffMember, updateStaffMember, roles } = useStaff();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<string>("name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
@@ -42,7 +49,9 @@ export function StaffList({ onAddEmployee }: StaffListProps) {
   const [deleteConfirm, setDeleteConfirm] = useState<{id: string, name: string} | null>(null);
   const [confirmText, setConfirmText] = useState("");
   
-  // Función para filtrar y ordenar
+  const [quickEditRole, setQuickEditRole] = useState<{id: string, name: string, roleId: string} | null>(null);
+  const [quickEditStatus, setQuickEditStatus] = useState<{id: string, name: string, status: "active" | "suspended" | "inactive"} | null>(null);
+  
   const filteredStaff = staff.filter((member) =>
     member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     member.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -53,7 +62,6 @@ export function StaffList({ onAddEmployee }: StaffListProps) {
     let valueA: any = a[sortBy as keyof typeof a];
     let valueB: any = b[sortBy as keyof typeof b];
 
-    // Manejar casos especiales
     if (sortBy === "role") {
       valueA = getRoleById(a.roleId)?.name || "";
       valueB = getRoleById(b.roleId)?.name || "";
@@ -65,7 +73,6 @@ export function StaffList({ onAddEmployee }: StaffListProps) {
     if (valueA === undefined) return 0;
     if (valueB === undefined) return 0;
 
-    // Comparar valores
     if (typeof valueA === "string" && typeof valueB === "string") {
       return sortOrder === "asc"
         ? valueA.localeCompare(valueB)
@@ -79,7 +86,6 @@ export function StaffList({ onAddEmployee }: StaffListProps) {
     }
   });
 
-  // Función para cambiar el orden
   const toggleSort = (field: string) => {
     if (sortBy === field) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
@@ -89,7 +95,6 @@ export function StaffList({ onAddEmployee }: StaffListProps) {
     }
   };
 
-  // Función para mostrar el badge de estado
   const renderStatusBadge = (status: string) => {
     const statusConfig = {
       "active": { label: "Activo", color: "bg-green-100 text-green-800" },
@@ -109,11 +114,9 @@ export function StaffList({ onAddEmployee }: StaffListProps) {
     );
   };
 
-  // Manejar eliminación de empleado
   const handleDelete = () => {
     if (!deleteConfirm) return;
     
-    // Verificar que el texto de confirmación coincide con el nombre
     if (confirmText.trim().toLowerCase() !== deleteConfirm.name.toLowerCase()) {
       toast.error("El nombre ingresado no coincide con el nombre del empleado");
       return;
@@ -124,8 +127,23 @@ export function StaffList({ onAddEmployee }: StaffListProps) {
     setConfirmText("");
     toast.success("Empleado eliminado correctamente");
   };
-  
-  // Verificar si no hay empleados
+
+  const handleRoleUpdate = (newRoleId: string) => {
+    if (!quickEditRole) return;
+    
+    updateStaffMember(quickEditRole.id, { roleId: newRoleId });
+    toast.success(`Rol de ${quickEditRole.name} actualizado correctamente`);
+    setQuickEditRole(null);
+  };
+
+  const handleStatusUpdate = (newStatus: "active" | "suspended" | "inactive") => {
+    if (!quickEditStatus) return;
+    
+    updateStaffMember(quickEditStatus.id, { status: newStatus });
+    toast.success(`Estado de ${quickEditStatus.name} actualizado correctamente`);
+    setQuickEditStatus(null);
+  };
+
   if (staff.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 space-y-4">
@@ -148,7 +166,6 @@ export function StaffList({ onAddEmployee }: StaffListProps) {
 
   return (
     <div className="space-y-4">
-      {/* Barra de búsqueda y filtros */}
       <div className="flex flex-col sm:flex-row gap-4 items-center">
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
@@ -165,7 +182,6 @@ export function StaffList({ onAddEmployee }: StaffListProps) {
         </Button>
       </div>
 
-      {/* Tabla de empleados */}
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
@@ -234,9 +250,43 @@ export function StaffList({ onAddEmployee }: StaffListProps) {
                     onClick={() => setSelectedStaff(member.id)}
                   >
                     <TableCell className="font-medium">{member.name}</TableCell>
-                    <TableCell>{getRoleById(member.roleId)?.name}</TableCell>
+                    <TableCell className="flex items-center gap-2">
+                      {getRoleById(member.roleId)?.name}
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        className="h-6 w-6 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setQuickEditRole({
+                            id: member.id,
+                            name: member.name,
+                            roleId: member.roleId
+                          });
+                        }}
+                      >
+                        <UserCog className="h-3.5 w-3.5" />
+                      </Button>
+                    </TableCell>
                     <TableCell>{getBranchById(member.branchId || "")?.name || "-"}</TableCell>
-                    <TableCell>{renderStatusBadge(member.status)}</TableCell>
+                    <TableCell className="flex items-center gap-2">
+                      {renderStatusBadge(member.status)}
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        className="h-6 w-6 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setQuickEditStatus({
+                            id: member.id,
+                            name: member.name,
+                            status: member.status
+                          });
+                        }}
+                      >
+                        <Activity className="h-3.5 w-3.5" />
+                      </Button>
+                    </TableCell>
                     <TableCell>
                       {member.lastLogin
                         ? formatDistanceToNow(new Date(member.lastLogin), {
@@ -276,7 +326,6 @@ export function StaffList({ onAddEmployee }: StaffListProps) {
         </div>
       </Card>
 
-      {/* Modal de detalle de empleado */}
       {selectedStaff && (
         <Dialog open={!!selectedStaff} onOpenChange={() => setSelectedStaff(null)}>
           <DialogContent className="sm:max-w-lg">
@@ -298,7 +347,6 @@ export function StaffList({ onAddEmployee }: StaffListProps) {
         </Dialog>
       )}
 
-      {/* Modal de edición de empleado */}
       {editingStaff && (
         <Dialog open={!!editingStaff} onOpenChange={() => setEditingStaff(null)}>
           <DialogContent className="sm:max-w-xl">
@@ -311,7 +359,6 @@ export function StaffList({ onAddEmployee }: StaffListProps) {
         </Dialog>
       )}
 
-      {/* Modal de confirmación de eliminación */}
       {deleteConfirm && (
         <Dialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
           <DialogContent className="sm:max-w-md">
@@ -352,6 +399,58 @@ export function StaffList({ onAddEmployee }: StaffListProps) {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+      )}
+
+      {quickEditRole && (
+        <QuickEditDialog
+          title="Actualizar rol de empleado"
+          description={`Estás cambiando el rol de ${quickEditRole.name}. ¿Estás seguro?`}
+          onClose={() => setQuickEditRole(null)}
+          onConfirm={() => {}}
+        >
+          <div className="py-4 space-y-4">
+            <Select 
+              defaultValue={quickEditRole.roleId}
+              onValueChange={handleRoleUpdate}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecciona un rol" />
+              </SelectTrigger>
+              <SelectContent>
+                {roles.map(role => (
+                  <SelectItem key={role.id} value={role.id}>
+                    {role.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </QuickEditDialog>
+      )}
+
+      {quickEditStatus && (
+        <QuickEditDialog
+          title="Actualizar estado de empleado"
+          description={`Estás cambiando el estado de ${quickEditStatus.name}. ¿Estás seguro?`}
+          onClose={() => setQuickEditStatus(null)}
+          onConfirm={() => {}}
+        >
+          <div className="py-4 space-y-4">
+            <Select 
+              defaultValue={quickEditStatus.status}
+              onValueChange={(value: "active" | "suspended" | "inactive") => handleStatusUpdate(value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecciona un estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Activo</SelectItem>
+                <SelectItem value="suspended">Suspendido</SelectItem>
+                <SelectItem value="inactive">Inactivo</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </QuickEditDialog>
       )}
     </div>
   );
