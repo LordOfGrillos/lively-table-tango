@@ -3,6 +3,7 @@ import { Bell, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { NotificationPanel } from "@/components/notifications/NotificationPanel";
 
 type HeaderProps = {
   title: string;
@@ -22,9 +23,7 @@ export function Header({ title, subtitle, actionButton, className }: HeaderProps
       <div className="flex items-center space-x-4">
         {actionButton}
         
-        <Button variant="ghost" size="icon" className="rounded-full">
-          <Bell className="h-5 w-5 text-gray-600" />
-        </Button>
+        <NotificationPanel />
         
         <div className="flex items-center space-x-2">
           <Avatar className="h-9 w-9 border border-gray-200">
