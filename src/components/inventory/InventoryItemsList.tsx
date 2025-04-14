@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Search, Filter, ArrowUpDown } from "lucide-react";
+import { Search, Filter, ArrowUpDown, Edit, PlusCircle, MinusCircle, Trash2, MoreHorizontal } from "lucide-react";
 import { useInventory, InventoryItem } from "./InventoryContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -15,12 +15,31 @@ import {
 } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { EditItemDialog } from "./dialogs/EditItemDialog";
+import { StockAdjustmentDialog } from "./dialogs/StockAdjustmentDialog";
+import { DeleteConfirmDialog } from "./dialogs/DeleteConfirmDialog";
 
 export function InventoryItemsList() {
-  const { items } = useInventory();
+  const { items, updateItem, deleteItem, updateStock } = useInventory();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<string>("name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  
+  // State for dialogs
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [stockDialogOpen, setStockDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [stockAdjustmentType, setStockAdjustmentType] = useState<"add" | "reduce">("add");
 
   // Filter items based on search query
   const filteredItems = items.filter((item) =>
@@ -65,6 +84,25 @@ export function InventoryItemsList() {
       setSortBy(field);
       setSortOrder("asc");
     }
+  };
+
+  // Handle edit item
+  const handleEditItem = (item: InventoryItem) => {
+    setSelectedItem(item);
+    setEditDialogOpen(true);
+  };
+
+  // Handle stock adjustment
+  const handleStockAdjustment = (item: InventoryItem, type: "add" | "reduce") => {
+    setSelectedItem(item);
+    setStockAdjustmentType(type);
+    setStockDialogOpen(true);
+  };
+
+  // Handle delete item
+  const handleDeleteItem = (item: InventoryItem) => {
+    setSelectedItem(item);
+    setDeleteDialogOpen(true);
   };
 
   // Render status badge with appropriate color
@@ -176,12 +214,13 @@ export function InventoryItemsList() {
                     <ArrowUpDown className="h-3 w-3" />
                   </button>
                 </TableHead>
+                <TableHead className="w-[100px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {sortedItems.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-10 text-gray-500">
+                  <TableCell colSpan={8} className="text-center py-10 text-gray-500">
                     No inventory items found. Try adjusting your search.
                   </TableCell>
                 </TableRow>
@@ -205,6 +244,47 @@ export function InventoryItemsList() {
                           })
                         : "Never"}
                     </TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-end gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8"
+                          onClick={() => handleEditItem(item)}
+                          title="Edit Item"
+                        >
+                          <Edit className="h-4 w-4 text-gray-500 hover:text-app-purple" />
+                        </Button>
+                        
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="h-4 w-4 text-gray-500 hover:text-app-purple" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Options</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => handleStockAdjustment(item, "add")}>
+                              <PlusCircle className="mr-2 h-4 w-4" />
+                              Add Stock
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStockAdjustment(item, "reduce")}>
+                              <MinusCircle className="mr-2 h-4 w-4" />
+                              Reduce Stock
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              onClick={() => handleDeleteItem(item)}
+                              className="text-red-600 focus:text-red-600"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete Item
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))
               )}
@@ -212,6 +292,34 @@ export function InventoryItemsList() {
           </Table>
         </div>
       </Card>
+
+      {/* Edit Item Dialog */}
+      {selectedItem && (
+        <EditItemDialog 
+          open={editDialogOpen} 
+          onOpenChange={setEditDialogOpen} 
+          item={selectedItem} 
+        />
+      )}
+
+      {/* Stock Adjustment Dialog */}
+      {selectedItem && (
+        <StockAdjustmentDialog 
+          open={stockDialogOpen} 
+          onOpenChange={setStockDialogOpen} 
+          item={selectedItem} 
+          adjustmentType={stockAdjustmentType}
+        />
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {selectedItem && (
+        <DeleteConfirmDialog 
+          open={deleteDialogOpen} 
+          onOpenChange={setDeleteDialogOpen} 
+          item={selectedItem} 
+        />
+      )}
     </div>
   );
 }
