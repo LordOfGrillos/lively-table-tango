@@ -1,5 +1,5 @@
 
-import { InventoryItem, useInventory } from "../InventoryContext";
+import { InventoryItem, useInventory } from "../context";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,

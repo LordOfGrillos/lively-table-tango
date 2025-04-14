@@ -1,6 +1,6 @@
 
 import { AlertTriangle, TrendingDown, TrendingUp, Package, DollarSign, Clock } from "lucide-react";
-import { useInventory } from "./InventoryContext";
+import { useInventory } from "./context";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";

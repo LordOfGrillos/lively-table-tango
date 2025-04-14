@@ -1,7 +1,6 @@
-
 import { Package, BarChart2, Clock, AlertTriangle, ShoppingBag, PlusCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useInventory } from "./InventoryContext";
+import { useInventory } from "./context";
 
 interface InventoryTabsProps {
   activeTab: string;

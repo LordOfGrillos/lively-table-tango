@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Header } from "@/components/layout/Header";
 import { InventoryDashboard } from "@/components/inventory/InventoryDashboard";
 import { InventoryTabs } from "@/components/inventory/InventoryTabs";
-import { InventoryProvider } from "@/components/inventory/InventoryContext";
+import { InventoryProvider } from "@/components/inventory/context";
 import { InventoryAddItem } from "@/components/inventory/InventoryAddItem";
 import { InventoryItemsList } from "@/components/inventory/InventoryItemsList";
 import { PlusCircle } from "lucide-react";

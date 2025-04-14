@@ -1,6 +1,6 @@
 
 import { useEffect } from "react";
-import { useInventory } from "../InventoryContext";
+import { useInventory } from "../context";
 import { MenuItemType } from "@/components/menu/MenuItem";
 import { Order } from "@/components/tables/TableActionPanel";
 

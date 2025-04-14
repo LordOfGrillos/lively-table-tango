@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { InventoryItem, useInventory, InventoryUnit, InventoryItemType } from "../InventoryContext";
+import { InventoryItem, useInventory, InventoryUnit, InventoryItemType } from "../context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,7 +28,6 @@ interface EditItemDialogProps {
 export function EditItemDialog({ open, onOpenChange, item }: EditItemDialogProps) {
   const { updateItem, categories } = useInventory();
   
-  // State for form values
   const [formValues, setFormValues] = useState({
     name: item.name,
     type: item.type,
@@ -43,7 +41,6 @@ export function EditItemDialog({ open, onOpenChange, item }: EditItemDialogProps
     notes: item.notes || "",
   });
 
-  // Handle input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormValues((prev) => ({
@@ -54,7 +51,6 @@ export function EditItemDialog({ open, onOpenChange, item }: EditItemDialogProps
     }));
   };
 
-  // Handle select changes
   const handleSelectChange = (name: string, value: string) => {
     setFormValues((prev) => ({
       ...prev,
@@ -62,7 +58,6 @@ export function EditItemDialog({ open, onOpenChange, item }: EditItemDialogProps
     }));
   };
 
-  // Handle save
   const handleSave = () => {
     updateItem(item.id, {
       ...formValues,

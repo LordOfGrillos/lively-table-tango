@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useInventory, InventoryItem } from "./InventoryContext";
+import { useInventory, InventoryItem } from "./context";
 import { Table, TableBody } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
 import { EditItemDialog } from "./dialogs/EditItemDialog";

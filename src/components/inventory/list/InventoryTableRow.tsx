@@ -1,7 +1,7 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { Edit, PlusCircle, MinusCircle, Trash2, MoreHorizontal } from "lucide-react";
-import { InventoryItem } from "../InventoryContext";
+import { InventoryItem } from "../context";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
