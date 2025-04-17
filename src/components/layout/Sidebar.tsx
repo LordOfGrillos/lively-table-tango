@@ -1,6 +1,6 @@
 
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, Home, ShoppingCart, Users, Clock, FileText, Settings, LayoutGrid, Package, UserCog } from "lucide-react";
+import { ChevronDown, Home, ShoppingCart, Users, Clock, FileText, Settings, LayoutGrid, Package, UserCog, UtensilsCrossed } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -128,6 +128,12 @@ export function Sidebar() {
           label="Inventory" 
           active={pathname === '/inventory'}
           onClick={() => navigate('/inventory')}
+        />
+        <SidebarItem 
+          icon={UtensilsCrossed} 
+          label="Platillos y Menús" 
+          active={pathname === '/dishes'}
+          onClick={() => navigate('/dishes')}
         />
         <SidebarItem 
           icon={UserCog} 
