@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Inventory from "./pages/Inventory";
 import Staff from "./pages/Staff";
+import Dishes from "./pages/Dishes";
 import { NotificationProvider } from "./context/NotificationContext";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/staff" element={<Staff />} />
+            <Route path="/dishes" element={<Dishes />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
