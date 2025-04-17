@@ -11,7 +11,7 @@ import { TableManager } from "@/components/tables/TableManager";
 import { MenuList } from "@/components/menu/MenuList";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { useInventory } from "@/components/inventory/InventoryContext";
+import { useInventory } from "@/components/inventory/context";
 
 interface OrderCreationProps {
   onCancel: () => void;

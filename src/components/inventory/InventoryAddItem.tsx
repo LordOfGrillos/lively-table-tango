@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useInventory, InventoryItemType, InventoryUnit } from "./InventoryContext";
+import { useInventory } from "./context";
+import { InventoryItemType, InventoryUnit } from "./types";
 import { Camera, Loader2 } from "lucide-react";
 
 const itemTypes: { value: InventoryItemType; label: string }[] = [

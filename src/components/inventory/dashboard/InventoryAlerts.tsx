@@ -1,5 +1,5 @@
 
-import { useInventory } from "../InventoryContext";
+import { useInventory } from "../context";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";

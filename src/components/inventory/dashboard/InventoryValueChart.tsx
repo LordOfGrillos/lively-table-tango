@@ -1,7 +1,7 @@
 
 import { useMemo } from "react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { useInventory } from "../InventoryContext";
+import { useInventory } from "../context";
 import { Card } from "@/components/ui/card";
 import { format, subDays } from "date-fns";
 

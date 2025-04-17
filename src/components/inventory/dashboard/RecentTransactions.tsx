@@ -1,10 +1,9 @@
-
 import { format } from "date-fns";
 import { ArrowDown, ArrowUp, MoreHorizontal } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { InventoryTransaction } from "../InventoryContext";
+import { InventoryTransaction } from "../types";
 
 interface RecentTransactionsProps {
   transactions: InventoryTransaction[];

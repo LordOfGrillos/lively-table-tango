@@ -1,5 +1,5 @@
 
-import { useInventory } from "../InventoryContext";
+import { useInventory } from "../context";
 import { Card } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 

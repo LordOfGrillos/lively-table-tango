@@ -1,6 +1,6 @@
 
 import { useNavigate } from "react-router-dom";
-import { useInventory } from "../InventoryContext";
+import { useInventory } from "../context";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Package, PlusCircle } from "lucide-react";
