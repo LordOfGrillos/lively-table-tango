@@ -53,7 +53,11 @@ export function DishCreation() {
     }
     
     addDish({
-      ...data,
+      name: data.name,
+      description: data.description,
+      price: data.price,
+      menuId: data.menuId,
+      preparationTime: data.preparationTime,
       ingredients,
       isActive: true,
     });

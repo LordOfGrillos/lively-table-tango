@@ -44,7 +44,8 @@ export function CreateMenuDialog({ menuId, onClose }: CreateMenuDialogProps) {
       updateMenu(menuId, data);
     } else {
       addMenu({
-        ...data,
+        name: data.name,
+        description: data.description,
         dishes: [],
         isActive: true,
       });

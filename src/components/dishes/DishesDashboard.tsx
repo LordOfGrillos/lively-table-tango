@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { DishList } from "./DishList";
 import { MenuList } from "./MenuList";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateMenuDialog } from "./CreateMenuDialog";
+import { DishCreation } from "./DishCreation";
 
 export function DishesDashboard() {
   const { dishes, menus } = useDishContext();
