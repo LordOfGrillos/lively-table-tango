@@ -1,37 +1,26 @@
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import Index from "@/pages/Index";
+import Dishes from "@/pages/Dishes";
+import Inventory from "@/pages/Inventory";
+import Staff from "@/pages/Staff";
+import NotFound from "@/pages/NotFound";
+import { Toaster } from "sonner";
+import Counter from '@/pages/Counter';
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import Inventory from "./pages/Inventory";
-import Staff from "./pages/Staff";
-import Dishes from "./pages/Dishes";
-import { NotificationProvider } from "./context/NotificationContext";
-
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <NotificationProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/inventory" element={<Inventory />} />
-            <Route path="/staff" element={<Staff />} />
-            <Route path="/dishes" element={<Dishes />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </NotificationProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
-
-export default App;
+export default function App() {
+  return (
+    <div className="min-h-screen w-full flex flex-col relative">
+      <Router>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/dishes" element={<Dishes />} />
+          <Route path="/inventory" element={<Inventory />} />
+          <Route path="/staff" element={<Staff />} />
+          <Route path="/counter" element={<Counter />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Router>
+      <Toaster />
+    </div>
+  );
+}

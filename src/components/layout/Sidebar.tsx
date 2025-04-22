@@ -1,5 +1,4 @@
-
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, useMobile } from "react-router-dom";
 import { ChevronDown, Home, ShoppingCart, Users, Clock, FileText, Settings, LayoutGrid, Package, UserCog, UtensilsCrossed } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -72,8 +71,10 @@ const SidebarSubmenu = ({ isOpen, items }: SidebarSubmenuProps) => {
 };
 
 export function Sidebar() {
+  const location = useLocation();
   const navigate = useNavigate();
-  const pathname = window.location.pathname;
+  const isMobile = useMobile();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(!isMobile);
   
   return (
     <div className="w-64 border-r border-gray-200 h-screen flex flex-col p-4">
@@ -100,13 +101,13 @@ export function Sidebar() {
         <SidebarItem 
           icon={Home} 
           label="Dashboard" 
-          active={pathname === '/'}
+          active={location.pathname === '/'}
           onClick={() => navigate('/')}
         />
         <SidebarItem 
           icon={LayoutGrid} 
           label="Table Management"
-          active={pathname === '/' && pathname.indexOf('/inventory') === -1 && pathname.indexOf('/staff') === -1}
+          active={location.pathname === '/' && location.pathname.indexOf('/inventory') === -1 && location.pathname.indexOf('/staff') === -1}
           onClick={() => navigate('/')}
         />
         <SidebarItem 
@@ -126,19 +127,19 @@ export function Sidebar() {
         <SidebarItem 
           icon={Package} 
           label="Inventory" 
-          active={pathname === '/inventory'}
+          active={location.pathname === '/inventory'}
           onClick={() => navigate('/inventory')}
         />
         <SidebarItem 
           icon={UtensilsCrossed} 
           label="Platillos y Menús" 
-          active={pathname === '/dishes'}
+          active={location.pathname === '/dishes'}
           onClick={() => navigate('/dishes')}
         />
         <SidebarItem 
           icon={UserCog} 
           label="Personal y Roles" 
-          active={pathname === '/staff'}
+          active={location.pathname === '/staff'}
           onClick={() => navigate('/staff')}
         />
         <SidebarItem icon={Users} label="Master Data" hasSubmenu />
