@@ -17,6 +17,14 @@ export default function Counter() {
     );
   };
 
+  // Filter out orders with "pending" status and map CounterOrder to CafeOrder
+  const cafeOrders = orders
+    .filter(order => order.status !== "pending")
+    .map(order => ({
+      ...order,
+      status: order.status as "preparing" | "ready" | "completed"
+    }));
+
   return (
     <div className="flex h-screen w-full overflow-hidden">
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -40,7 +48,7 @@ export default function Counter() {
               
               <TabsContent value="log">
                 <CafeOrderList 
-                  orders={orders} 
+                  orders={cafeOrders} 
                   onStatusChange={handleStatusChange}
                 />
               </TabsContent>

@@ -17,9 +17,9 @@ export type CafeOrder = {
   orderNumber: number;
   items: OrderItem[];
   total: number;
-  status: "preparing" | "ready" | "completed";
+  status: "preparing" | "ready" | "completed"; // Note: doesn't include "pending"
   createdAt: Date;
-  paidAt: Date;
+  paidAt: Date | null;
 };
 
 interface CafeOrderListProps {
