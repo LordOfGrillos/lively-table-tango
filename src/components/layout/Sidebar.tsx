@@ -1,7 +1,9 @@
-import { useNavigate, useLocation, useMobile } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useState } from "react";
 import { ChevronDown, Home, ShoppingCart, Users, Clock, FileText, Settings, LayoutGrid, Package, UserCog, UtensilsCrossed } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type SidebarItemProps = {
   icon: React.ElementType;
@@ -73,7 +75,7 @@ const SidebarSubmenu = ({ isOpen, items }: SidebarSubmenuProps) => {
 export function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const [isSidebarOpen, setIsSidebarOpen] = useState(!isMobile);
   
   return (
