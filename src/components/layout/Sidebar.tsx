@@ -1,6 +1,20 @@
+
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
-import { ChevronDown, Home, ShoppingCart, Users, Clock, FileText, Settings, LayoutGrid, Package, UserCog, UtensilsCrossed } from "lucide-react";
+import { 
+  ChevronDown, 
+  Home, 
+  ShoppingCart, 
+  Users, 
+  Clock, 
+  FileText, 
+  Settings, 
+  LayoutGrid, 
+  Package, 
+  UserCog, 
+  UtensilsCrossed,
+  Coffee 
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -106,48 +120,70 @@ export function Sidebar() {
           active={location.pathname === '/'}
           onClick={() => navigate('/')}
         />
-        <SidebarItem 
-          icon={LayoutGrid} 
-          label="Table Management"
-          active={location.pathname === '/' && location.pathname.indexOf('/inventory') === -1 && location.pathname.indexOf('/staff') === -1}
-          onClick={() => navigate('/')}
-        />
-        <SidebarItem 
-          icon={ShoppingCart} 
-          label="Cashier" 
-          hasSubmenu 
-          isSubmenuOpen={true}
-        />
-        <SidebarSubmenu 
-          isOpen={true}
-          items={[
-            { label: "Add Order", active: true },
-            { label: "Order List" },
-            { label: "Transaction Completed" }
-          ]}
-        />
-        <SidebarItem 
-          icon={Package} 
-          label="Inventory" 
-          active={location.pathname === '/inventory'}
-          onClick={() => navigate('/inventory')}
-        />
-        <SidebarItem 
-          icon={UtensilsCrossed} 
-          label="Platillos y Menús" 
-          active={location.pathname === '/dishes'}
-          onClick={() => navigate('/dishes')}
-        />
-        <SidebarItem 
-          icon={UserCog} 
-          label="Personal y Roles" 
-          active={location.pathname === '/staff'}
-          onClick={() => navigate('/staff')}
-        />
-        <SidebarItem icon={Users} label="Master Data" hasSubmenu />
-        <SidebarItem icon={Clock} label="Sales Transaction" />
-        <SidebarItem icon={FileText} label="Reports" />
-        <SidebarItem icon={Settings} label="Settings" />
+        
+        <div className="py-2">
+          <div className="text-xs font-semibold text-gray-500 px-4 mb-2">RESTAURANT</div>
+          <SidebarItem 
+            icon={LayoutGrid} 
+            label="Table Management"
+            active={location.pathname === '/' && location.pathname.indexOf('/inventory') === -1 && location.pathname.indexOf('/staff') === -1}
+            onClick={() => navigate('/')}
+          />
+          <SidebarItem 
+            icon={ShoppingCart} 
+            label="Table Orders" 
+            hasSubmenu 
+            isSubmenuOpen={true}
+          />
+          <SidebarSubmenu 
+            isOpen={true}
+            items={[
+              { label: "Add Order", active: true },
+              { label: "Order List" },
+              { label: "Transaction Completed" }
+            ]}
+          />
+        </div>
+
+        <div className="py-2">
+          <div className="text-xs font-semibold text-gray-500 px-4 mb-2">CAFETERIA</div>
+          <SidebarItem 
+            icon={Coffee} 
+            label="Counter Orders"
+            active={location.pathname === '/counter'}
+            onClick={() => navigate('/counter')}
+          />
+        </div>
+
+        <div className="py-2">
+          <div className="text-xs font-semibold text-gray-500 px-4 mb-2">MANAGEMENT</div>
+          <SidebarItem 
+            icon={Package} 
+            label="Inventory" 
+            active={location.pathname === '/inventory'}
+            onClick={() => navigate('/inventory')}
+          />
+          <SidebarItem 
+            icon={UtensilsCrossed} 
+            label="Platillos y Menús" 
+            active={location.pathname === '/dishes'}
+            onClick={() => navigate('/dishes')}
+          />
+          <SidebarItem 
+            icon={UserCog} 
+            label="Personal y Roles" 
+            active={location.pathname === '/staff'}
+            onClick={() => navigate('/staff')}
+          />
+        </div>
+
+        <div className="py-2">
+          <div className="text-xs font-semibold text-gray-500 px-4 mb-2">SYSTEM</div>
+          <SidebarItem icon={Users} label="Master Data" hasSubmenu />
+          <SidebarItem icon={Clock} label="Sales Transaction" />
+          <SidebarItem icon={FileText} label="Reports" />
+          <SidebarItem icon={Settings} label="Settings" />
+        </div>
       </div>
     </div>
   );
