@@ -1,12 +1,16 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { CounterOrderSystem, type CounterOrder } from "@/components/counter/CounterOrderSystem";
 import { CafeOrderList } from "@/components/counter/CafeOrderList";
 import { InventoryProvider } from "@/components/inventory/context";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
 
 export default function Counter() {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState<CounterOrder[]>([]);
   
   const handleStatusChange = (orderId: string, newStatus: CounterOrder['status']) => {
@@ -25,12 +29,26 @@ export default function Counter() {
       status: order.status as "preparing" | "ready" | "completed"
     }));
 
+  const handleExit = () => {
+    navigate('/');  // Navigate back to the main dashboard
+  };
+
   return (
     <div className="flex h-screen w-full overflow-hidden">
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
-          title="Counter Order System" 
-          subtitle="Take orders directly from the counter"
+          title="Cafeteria Order System" 
+          subtitle="Manage counter orders"
+          actionButton={
+            <Button 
+              variant="destructive" 
+              onClick={handleExit}
+              className="flex items-center gap-2"
+            >
+              <LogOut className="h-4 w-4" />
+              Salir
+            </Button>
+          }
         />
         <div className="flex-1 overflow-y-auto p-6">
           <div className="max-w-7xl mx-auto">
