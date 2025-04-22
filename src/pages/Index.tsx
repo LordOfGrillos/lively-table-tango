@@ -10,6 +10,7 @@ import { Order, OrderItem } from "@/components/tables/TableActionPanel";
 import { toast } from "sonner";
 import { OrderCreation } from "@/components/orders/OrderCreation";
 import { OrderList } from "@/components/orders/OrderList";
+import { InventoryProvider } from "@/components/inventory/context";
 
 // Sample order data
 const fakeOrders: Order[] = [
@@ -149,10 +150,12 @@ export default function Index() {
       
       <div className="flex-1 flex flex-col overflow-hidden">
         {orderMode ? (
-          <OrderCreation 
-            onCancel={handleCancelOrder}
-            onOrderCreate={handleCreateOrder}
-          />
+          <InventoryProvider>
+            <OrderCreation 
+              onCancel={handleCancelOrder}
+              onOrderCreate={handleCreateOrder}
+            />
+          </InventoryProvider>
         ) : (
           <>
             <Header 
