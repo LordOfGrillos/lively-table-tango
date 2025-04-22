@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { OrderCart } from "./OrderCart";
 import { ProductList } from "./ProductList";
@@ -34,7 +33,11 @@ export type CounterOrder = {
   paidAt: Date | null;
 };
 
-export function CounterOrderSystem() {
+interface CounterOrderSystemProps {
+  onOrderComplete?: (order: CounterOrder) => void;
+}
+
+export function CounterOrderSystem({ onOrderComplete }: CounterOrderSystemProps) {
   const [currentOrder, setCurrentOrder] = useState<OrderItem[]>([]);
   const [customerName, setCustomerName] = useState("");
   const [orderNumber, setOrderNumber] = useState(getNextOrderNumber());
@@ -43,12 +46,10 @@ export function CounterOrderSystem() {
   const inventory = useInventory();
 
   function getNextOrderNumber() {
-    // In a real app, this would be fetched from the backend
     return Math.floor(1000 + Math.random() * 9000);
   }
 
   const addToOrder = (item: OrderItem) => {
-    // Check if we have the item in inventory
     if (inventory) {
       const requiredIngredients = inventory.items.filter(inventoryItem => 
         inventoryItem.usedInRecipes.some(recipe => recipe.menuItemName === item.name)
@@ -66,14 +67,11 @@ export function CounterOrderSystem() {
       }
     }
 
-    // Check if the item already exists with the same customizations
     const existingItemIndex = currentOrder.findIndex(orderItem => {
       if (orderItem.name !== item.name) return false;
       
-      // If customizations length doesn't match, it's different
       if (orderItem.customizations.length !== item.customizations.length) return false;
       
-      // Check if all customizations match
       return orderItem.customizations.every(c1 => 
         item.customizations.some(c2 => 
           c1.name === c2.name && c1.option === c2.option
@@ -82,12 +80,10 @@ export function CounterOrderSystem() {
     });
     
     if (existingItemIndex >= 0) {
-      // Update quantity if it exists
       const newOrder = [...currentOrder];
       newOrder[existingItemIndex].quantity += item.quantity;
       setCurrentOrder(newOrder);
     } else {
-      // Add new item
       setCurrentOrder([...currentOrder, item]);
     }
     
@@ -133,19 +129,17 @@ export function CounterOrderSystem() {
       paidAt: new Date()
     };
     
-    // In a real app, this would be sent to a backend API
-    console.log("Order placed:", newOrder);
+    onOrderComplete?.(newOrder);
     
-    toast.success(`Order #${orderNumber} has been placed!`, {
-      description: "Your order is being prepared"
-    });
-    
-    // Reset the order
     setCurrentOrder([]);
     setCustomerName("");
     setOrderNumber(getNextOrderNumber());
     setIsPaymentOpen(false);
     setActiveTab("menu");
+    
+    toast.success(`Order #${orderNumber} has been placed!`, {
+      description: "Your order is being prepared"
+    });
   };
 
   const handleProceedToPayment = () => {
