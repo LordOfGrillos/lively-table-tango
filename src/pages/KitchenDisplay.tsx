@@ -18,12 +18,7 @@ export default function KitchenDisplay() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
           title="Sistema de Visualización de Cocina" 
-          subtitle={
-            <div className="flex items-center text-gray-500">
-              <ChefHat className="h-5 w-5 mr-1" />
-              <span>Monitorea y gestiona órdenes por departamento</span>
-            </div>
-          }
+          subtitle="Monitorea y gestiona órdenes por departamento"
           actionButton={
             <Button 
               variant="outline"

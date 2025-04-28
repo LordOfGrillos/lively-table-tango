@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { NotificationPanel } from "@/components/notifications/NotificationPanel";
+import { ReactNode } from "react";
 
 type HeaderProps = {
   title: string;
-  subtitle?: string;
+  subtitle?: ReactNode;
   actionButton?: React.ReactNode;
   className?: string;
 };
