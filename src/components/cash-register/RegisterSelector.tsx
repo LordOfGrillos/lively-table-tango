@@ -44,24 +44,28 @@ export function RegisterSelector({ registers, selectedRegister, onSelectRegister
           <CommandInput placeholder="Buscar caja..." />
           <CommandEmpty>No se encontraron cajas.</CommandEmpty>
           <CommandGroup>
-            {registers.map((register) => (
-              <CommandItem
-                key={register.id}
-                value={register.id}
-                onSelect={() => {
-                  onSelectRegister(register);
-                  setOpen(false);
-                }}
-              >
-                <Check
-                  className={cn(
-                    "mr-2 h-4 w-4",
-                    selectedRegister?.id === register.id ? "opacity-100" : "opacity-0"
-                  )}
-                />
-                {register.name} - {register.location}
-              </CommandItem>
-            ))}
+            {registers && registers.length > 0 ? (
+              registers.map((register) => (
+                <CommandItem
+                  key={register.id}
+                  value={register.id}
+                  onSelect={() => {
+                    onSelectRegister(register);
+                    setOpen(false);
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      selectedRegister?.id === register.id ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  {register.name} - {register.location}
+                </CommandItem>
+              ))
+            ) : (
+              <CommandItem disabled>No hay cajas disponibles</CommandItem>
+            )}
           </CommandGroup>
         </Command>
       </PopoverContent>
