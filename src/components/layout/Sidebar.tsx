@@ -13,7 +13,8 @@ import {
   Package, 
   UserCog, 
   UtensilsCrossed,
-  Coffee 
+  Coffee,
+  Monitor
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -156,6 +157,16 @@ export function Sidebar() {
         </div>
 
         <div className="py-2">
+          <div className="text-xs font-semibold text-gray-500 px-4 mb-2">OPERATIONS</div>
+          <SidebarItem 
+            icon={Monitor} 
+            label="Kitchen Display System"
+            active={location.pathname === '/kitchen-display'}
+            onClick={() => navigate('/kitchen-display')}
+          />
+        </div>
+
+        <div className="py-2">
           <div className="text-xs font-semibold text-gray-500 px-4 mb-2">MANAGEMENT</div>
           <SidebarItem 
             icon={Package} 
@@ -179,10 +190,8 @@ export function Sidebar() {
 
         <div className="py-2">
           <div className="text-xs font-semibold text-gray-500 px-4 mb-2">SYSTEM</div>
-          <SidebarItem icon={Users} label="Master Data" hasSubmenu />
-          <SidebarItem icon={Clock} label="Sales Transaction" />
-          <SidebarItem icon={FileText} label="Reports" />
           <SidebarItem icon={Settings} label="Settings" />
+          <SidebarItem icon={FileText} label="Reports" />
         </div>
       </div>
     </div>
