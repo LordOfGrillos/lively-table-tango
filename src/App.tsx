@@ -9,6 +9,7 @@ import { Toaster } from "sonner";
 import Counter from '@/pages/Counter';
 import KitchenDisplay from '@/pages/KitchenDisplay';
 import CashRegister from '@/pages/CashRegister';
+import Settings from '@/pages/Settings';
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
           <Route path="/counter" element={<Counter />} />
           <Route path="/kitchen-display" element={<KitchenDisplay />} />
           <Route path="/cash-register" element={<CashRegister />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
