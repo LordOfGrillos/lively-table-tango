@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RegisterReport } from "./types";
-import { Cash, CreditCard, Receipt, Wallet } from "lucide-react";
+import { Wallet, CreditCard, Receipt, Banknote } from "lucide-react";
 
 interface ReportSummaryProps {
   report: RegisterReport;
@@ -26,7 +26,7 @@ export function ReportSummary({ report }: ReportSummaryProps) {
       <Card className="bg-white">
         <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
           <CardTitle className="text-sm font-medium">Efectivo</CardTitle>
-          <Cash className="h-4 w-4 text-green-600" />
+          <Banknote className="h-4 w-4 text-green-600" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">${report.totalCash.toFixed(2)}</div>
