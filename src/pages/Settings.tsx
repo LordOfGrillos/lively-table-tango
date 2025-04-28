@@ -15,11 +15,15 @@ export default function Settings() {
         <Header 
           title="Configuración del Sistema" 
           subtitle="Administra cajas registradoras, impresoras y otras configuraciones"
-          icon={<SettingsIcon className="h-6 w-6" />}
         />
         
         <div className="flex-1 overflow-y-auto p-6">
           <div className="max-w-7xl mx-auto space-y-6">
+            <div className="flex items-center mb-4">
+              <SettingsIcon className="h-6 w-6 mr-2 text-muted-foreground" />
+              <h1 className="text-2xl font-semibold">Configuraciones</h1>
+            </div>
+            
             <Tabs
               defaultValue="registers"
               value={activeTab}
