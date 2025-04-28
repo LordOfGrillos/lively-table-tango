@@ -6,17 +6,20 @@ export const mockRegisters: CashRegister[] = [
   {
     id: "register-1",
     name: "Caja Principal",
-    location: "Entrada"
+    location: "Entrada",
+    status: "closed" // Added the required status property
   },
   {
     id: "register-2",
     name: "Caja Secundaria",
-    location: "Bar"
+    location: "Bar",
+    status: "closed" // Added the required status property
   },
   {
     id: "register-3",
     name: "Caja 3",
-    location: "Terraza"
+    location: "Terraza",
+    status: "closed" // Added the required status property
   }
 ];
 
