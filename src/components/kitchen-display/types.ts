@@ -19,4 +19,5 @@ export type KitchenOrder = {
   startedAt?: Date;
   completedAt?: Date;
   estimatedPrepTime?: number; // in minutes
+  expanded?: boolean; // Nueva propiedad para controlar la visualización expandida
 };

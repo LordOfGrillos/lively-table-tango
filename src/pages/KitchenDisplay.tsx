@@ -17,8 +17,8 @@ export default function KitchenDisplay() {
     <div className="flex h-screen w-full overflow-hidden bg-gray-100">
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
-          title="Kitchen Display System" 
-          subtitle="Monitor orders across departments"
+          title="Sistema de Visualización de Cocina" 
+          subtitle="Monitorea órdenes por departamento"
           actionButton={
             <Button 
               variant="destructive" 
