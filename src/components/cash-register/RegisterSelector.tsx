@@ -9,6 +9,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
 } from "@/components/ui/command";
 import {
   Popover,
@@ -23,8 +24,10 @@ interface RegisterSelectorProps {
   onSelectRegister: (register: CashRegister) => void;
 }
 
-export function RegisterSelector({ registers, selectedRegister, onSelectRegister }: RegisterSelectorProps) {
+export function RegisterSelector({ registers = [], selectedRegister, onSelectRegister }: RegisterSelectorProps) {
   const [open, setOpen] = useState(false);
+  
+  const safeRegisters = Array.isArray(registers) ? registers : [];
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -42,31 +45,33 @@ export function RegisterSelector({ registers, selectedRegister, onSelectRegister
       <PopoverContent className="w-full p-0">
         <Command>
           <CommandInput placeholder="Buscar caja..." />
-          <CommandEmpty>No se encontraron cajas.</CommandEmpty>
-          <CommandGroup>
-            {registers && registers.length > 0 ? (
-              registers.map((register) => (
-                <CommandItem
-                  key={register.id}
-                  value={register.id}
-                  onSelect={() => {
-                    onSelectRegister(register);
-                    setOpen(false);
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      selectedRegister?.id === register.id ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  {register.name} - {register.location}
-                </CommandItem>
-              ))
-            ) : (
-              <CommandItem disabled>No hay cajas disponibles</CommandItem>
-            )}
-          </CommandGroup>
+          <CommandList>
+            <CommandEmpty>No se encontraron cajas.</CommandEmpty>
+            <CommandGroup>
+              {safeRegisters.length > 0 ? (
+                safeRegisters.map((register) => (
+                  <CommandItem
+                    key={register.id}
+                    value={register.id}
+                    onSelect={() => {
+                      onSelectRegister(register);
+                      setOpen(false);
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        selectedRegister?.id === register.id ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {register.name} - {register.location}
+                  </CommandItem>
+                ))
+              ) : (
+                <CommandItem disabled>No hay cajas disponibles</CommandItem>
+              )}
+            </CommandGroup>
+          </CommandList>
         </Command>
       </PopoverContent>
     </Popover>
