@@ -1,10 +1,10 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { KitchenDisplaySystem } from "@/components/kitchen-display/KitchenDisplaySystem";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, Coffee, ChefHat } from "lucide-react";
 
 export default function KitchenDisplay() {
   const navigate = useNavigate();
@@ -14,26 +14,29 @@ export default function KitchenDisplay() {
   };
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-gray-100">
+    <div className="flex h-screen w-full overflow-hidden bg-gray-50">
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
           title="Sistema de Visualización de Cocina" 
-          subtitle="Monitorea órdenes por departamento"
+          subtitle={
+            <div className="flex items-center text-gray-500">
+              <ChefHat className="h-5 w-5 mr-1" />
+              <span>Monitorea y gestiona órdenes por departamento</span>
+            </div>
+          }
           actionButton={
             <Button 
-              variant="destructive" 
+              variant="outline"
               onClick={handleExit}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
             >
               <LogOut className="h-4 w-4" />
               Salir
             </Button>
           }
         />
-        <div className="flex-1 overflow-y-auto">
-          <div className="h-full">
-            <KitchenDisplaySystem />
-          </div>
+        <div className="flex-1 overflow-hidden p-4">
+          <KitchenDisplaySystem />
         </div>
       </div>
     </div>

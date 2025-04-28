@@ -1,3 +1,4 @@
+
 import { KitchenOrder } from "./types";
 import { OrderCard } from "./OrderCard";
 import { cn } from "@/lib/utils";
@@ -45,11 +46,16 @@ export function BarOrdersPanel({
       "flex flex-col bg-white rounded-lg shadow-md overflow-hidden h-full",
       fullWidth ? "col-span-3" : ""
     )}>
-      <div className="bg-blue-800 text-white py-2 px-4 font-bold text-lg">
-        Bar ({orders.length})
+      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-3 px-4 font-bold text-lg flex items-center justify-between">
+        <span>Bar ({orders.length})</span>
+        {orders.length > 0 && orders.some(o => o.priority === "rush") && (
+          <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-pulse">
+            ¡URGENTE!
+          </span>
+        )}
       </div>
       
-      <div className="flex-1 overflow-y-auto p-2 space-y-2">
+      <div className="flex-1 overflow-y-auto p-3 space-y-4">
         {sortedOrders.length > 0 ? (
           sortedOrders.map((order, index) => (
             <OrderCard 
@@ -62,8 +68,8 @@ export function BarOrdersPanel({
             />
           ))
         ) : (
-          <div className="flex items-center justify-center h-32">
-            <p className="text-gray-500">No hay órdenes pendientes en bar</p>
+          <div className="flex items-center justify-center h-32 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+            <p className="text-gray-500 text-lg">No hay órdenes pendientes en bar</p>
           </div>
         )}
       </div>

@@ -7,10 +7,30 @@ import { CafeOrdersPanel } from "./CafeOrdersPanel";
 import { mockOrders } from "./data/mockOrders";
 import { KitchenOrder } from "./types";
 import { toast } from "sonner";
+import { Card, CardContent } from "@/components/ui/card";
+import { Clock, CheckCircle2, AlertTriangle, ChefHat } from "lucide-react";
 
 export function KitchenDisplaySystem() {
   const [orders, setOrders] = useState<KitchenOrder[]>(mockOrders);
   const [activeTab, setActiveTab] = useState<string>("all");
+  
+  // Stats for dashboard
+  const getStats = () => {
+    return {
+      waiting: orders.filter(o => o.status === "waiting").length,
+      inProgress: orders.filter(o => o.status === "in-progress").length,
+      ready: orders.filter(o => o.status === "ready").length,
+      lateOrders: orders.filter(o => {
+        if (!o.estimatedPrepTime) return false;
+        const now = new Date();
+        const diffInMinutes = Math.floor((now.getTime() - o.createdAt.getTime()) / 60000);
+        return diffInMinutes > o.estimatedPrepTime && 
+               (o.status === "waiting" || o.status === "in-progress");
+      }).length
+    };
+  };
+  
+  const stats = getStats();
   
   const filterOrdersByDepartment = (department: string) => {
     if (department === "all") return orders;
@@ -63,35 +83,85 @@ export function KitchenDisplaySystem() {
   };
 
   return (
-    <div className="h-full p-4">
-      <Tabs defaultValue="all" className="h-full flex flex-col" onValueChange={setActiveTab}>
-        <div className="flex justify-between items-center mb-4">
-          <TabsList className="grid grid-cols-4 w-2/3">
-            <TabsTrigger value="all">Todas las Órdenes</TabsTrigger>
-            <TabsTrigger value="kitchen">Cocina</TabsTrigger>
-            <TabsTrigger value="bar">Bar</TabsTrigger>
-            <TabsTrigger value="cafe">Café</TabsTrigger>
+    <div className="h-full p-4 bg-gray-50">
+      <div className="grid grid-cols-4 gap-4 mb-6">
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+          <CardContent className="pt-6 flex justify-between items-center">
+            <div>
+              <p className="text-sm font-medium text-blue-600 mb-1">Esperando</p>
+              <p className="text-3xl font-bold text-blue-800">{stats.waiting}</p>
+            </div>
+            <div className="p-3 bg-blue-100 rounded-full border border-blue-200">
+              <Clock className="h-8 w-8 text-blue-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200">
+          <CardContent className="pt-6 flex justify-between items-center">
+            <div>
+              <p className="text-sm font-medium text-amber-600 mb-1">En Preparación</p>
+              <p className="text-3xl font-bold text-amber-800">{stats.inProgress}</p>
+            </div>
+            <div className="p-3 bg-amber-100 rounded-full border border-amber-200">
+              <ChefHat className="h-8 w-8 text-amber-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+          <CardContent className="pt-6 flex justify-between items-center">
+            <div>
+              <p className="text-sm font-medium text-green-600 mb-1">Listas</p>
+              <p className="text-3xl font-bold text-green-800">{stats.ready}</p>
+            </div>
+            <div className="p-3 bg-green-100 rounded-full border border-green-200">
+              <CheckCircle2 className="h-8 w-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className={`bg-gradient-to-br from-${stats.lateOrders > 0 ? 'red' : 'gray'}-50 to-${stats.lateOrders > 0 ? 'red' : 'gray'}-100 border-${stats.lateOrders > 0 ? 'red' : 'gray'}-200`}>
+          <CardContent className="pt-6 flex justify-between items-center">
+            <div>
+              <p className={`text-sm font-medium text-${stats.lateOrders > 0 ? 'red' : 'gray'}-600 mb-1`}>Atrasadas</p>
+              <p className={`text-3xl font-bold text-${stats.lateOrders > 0 ? 'red' : 'gray'}-800`}>{stats.lateOrders}</p>
+            </div>
+            <div className={`p-3 bg-${stats.lateOrders > 0 ? 'red' : 'gray'}-100 rounded-full border border-${stats.lateOrders > 0 ? 'red' : 'gray'}-200`}>
+              <AlertTriangle className={`h-8 w-8 text-${stats.lateOrders > 0 ? 'red' : 'gray'}-600`} />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Tabs defaultValue="all" className="h-[calc(100%-120px)] flex flex-col bg-white rounded-lg shadow-sm" onValueChange={setActiveTab}>
+        <div className="flex justify-between items-center p-4 border-b">
+          <TabsList className="grid grid-cols-4 w-2/3 h-12">
+            <TabsTrigger value="all" className="text-base">Todas las Órdenes</TabsTrigger>
+            <TabsTrigger value="kitchen" className="text-base">Cocina</TabsTrigger>
+            <TabsTrigger value="bar" className="text-base">Bar</TabsTrigger>
+            <TabsTrigger value="cafe" className="text-base">Café</TabsTrigger>
           </TabsList>
           
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-              <span className="text-sm">Esperando</span>
+              <span className="text-base">Esperando</span>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-              <span className="text-sm">En Preparación</span>
+              <span className="text-base">En Preparación</span>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-green-500"></div>
-              <span className="text-sm">Listo</span>
+              <span className="text-base">Listo</span>
             </div>
           </div>
         </div>
         
         <div className="flex-1 overflow-hidden">
-          <TabsContent value="all" className="h-full">
-            <div className="grid grid-cols-3 gap-4 h-full">
+          <TabsContent value="all" className="h-full p-4">
+            <div className="grid grid-cols-3 gap-6 h-full">
               <KitchenOrdersPanel 
                 orders={filterOrdersByDepartment("kitchen")}
                 onMarkInProgress={handleMarkInProgress}
@@ -113,7 +183,7 @@ export function KitchenDisplaySystem() {
             </div>
           </TabsContent>
           
-          <TabsContent value="kitchen" className="h-full">
+          <TabsContent value="kitchen" className="h-full p-4">
             <KitchenOrdersPanel 
               orders={filterOrdersByDepartment("kitchen")}
               onMarkInProgress={handleMarkInProgress}
@@ -123,7 +193,7 @@ export function KitchenDisplaySystem() {
             />
           </TabsContent>
           
-          <TabsContent value="bar" className="h-full">
+          <TabsContent value="bar" className="h-full p-4">
             <BarOrdersPanel 
               orders={filterOrdersByDepartment("bar")}
               onMarkInProgress={handleMarkInProgress}
@@ -133,7 +203,7 @@ export function KitchenDisplaySystem() {
             />
           </TabsContent>
           
-          <TabsContent value="cafe" className="h-full">
+          <TabsContent value="cafe" className="h-full p-4">
             <CafeOrdersPanel 
               orders={filterOrdersByDepartment("cafe")}
               onMarkInProgress={handleMarkInProgress}

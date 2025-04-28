@@ -5,6 +5,14 @@ export type KitchenOrderItem = {
   quantity: number;
   notes?: string;
   modifiers?: string[];
+  recipe?: {
+    ingredients: Array<{
+      name: string;
+      quantity: string;
+      unit: string;
+    }>;
+    instructions?: string;
+  };
 };
 
 export type KitchenOrder = {
@@ -19,5 +27,5 @@ export type KitchenOrder = {
   startedAt?: Date;
   completedAt?: Date;
   estimatedPrepTime?: number; // in minutes
-  expanded?: boolean; // Nueva propiedad para controlar la visualización expandida
+  expanded?: boolean;
 };
