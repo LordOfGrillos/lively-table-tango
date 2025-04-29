@@ -67,7 +67,7 @@ export function AIInsights({ orders, className }: AIInsightsProps) {
   ];
 
   return (
-    <Card className={cn("shadow-sm border border-purple-100", className)}>
+    <Card className={cn("shadow-sm border border-purple-100 h-full flex flex-col", className)}>
       <CardHeader className="pb-3 border-b border-purple-100">
         <div className="flex items-center justify-between">
           <CardTitle className="text-xl font-semibold text-gray-800 flex items-center">
@@ -77,7 +77,7 @@ export function AIInsights({ orders, className }: AIInsightsProps) {
           <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">Beta</span>
         </div>
       </CardHeader>
-      <CardContent className="p-5 overflow-auto max-h-[500px]">
+      <CardContent className="p-5 overflow-auto max-h-[500px] flex-grow">
         <p className="text-sm text-gray-600 mb-5">
           Análisis inteligente de tus datos de ventas para ayudarte a tomar mejores decisiones de negocio.
         </p>
