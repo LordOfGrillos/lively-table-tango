@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 interface ReportMetricsProps {
   orders: Order[];
   className?: string;
+  isCompact?: boolean;
 }
 
 interface MetricCardProps {
@@ -32,10 +33,30 @@ interface MetricCardProps {
     value: number;
     isPositive: boolean;
   };
+  isCompact?: boolean;
 }
 
 // A beautiful card component for each metric
-function MetricCard({ title, value, description, icon, color, tooltipText, change }: MetricCardProps) {
+function MetricCard({ title, value, description, icon, color, tooltipText, change, isCompact }: MetricCardProps) {
+  if (isCompact) {
+    return (
+      <div className={`flex flex-col md:flex-row items-center gap-2 ${color}`}>
+        <div className={`rounded-full p-2 ${color.replace('border', 'bg').replace('-4', '-100')} ${color.replace('border', 'text').replace('-4', '-600')}`}>
+          {icon}
+        </div>
+        <div>
+          <h3 className="text-xs font-medium text-gray-500">{title}</h3>
+          <p className="text-lg md:text-xl font-bold text-gray-900">{value}</p>
+        </div>
+        {change && (
+          <div className={`text-xs font-medium ml-auto ${change.isPositive ? 'text-green-600' : 'text-red-600'}`}>
+            {change.isPositive ? '+' : ''}{change.value}%
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <Card className={`border-l-4 ${color} shadow-sm hover:shadow-md transition-shadow overflow-hidden`}>
       <CardContent className="p-4 relative">
@@ -76,8 +97,8 @@ function MetricCard({ title, value, description, icon, color, tooltipText, chang
   );
 }
 
-export function ReportMetrics({ orders, className }: ReportMetricsProps) {
-  const [isCompact, setIsCompact] = useState(false);
+export function ReportMetrics({ orders, className, isCompact = false }: ReportMetricsProps) {
+  const [showAllMetrics, setShowAllMetrics] = useState(false);
 
   // Calculate metrics from orders
   const totalOrders = orders.length;
@@ -179,9 +200,19 @@ export function ReportMetrics({ orders, className }: ReportMetricsProps) {
     }
   ];
 
-  const toggleCompact = () => {
-    setIsCompact(!isCompact);
+  const toggleShowAll = () => {
+    setShowAllMetrics(!showAllMetrics);
   };
+
+  if (isCompact) {
+    return (
+      <div className={cn("grid grid-cols-2 md:grid-cols-4 gap-4", className)}>
+        {primaryMetrics.map((metric, index) => (
+          <MetricCard key={index} {...metric} isCompact={true} />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className={cn(className)}>
@@ -190,10 +221,10 @@ export function ReportMetrics({ orders, className }: ReportMetricsProps) {
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={toggleCompact} 
+          onClick={toggleShowAll} 
           className="text-purple-700 border-purple-200 hover:bg-purple-50"
         >
-          {isCompact ? "Ver Detallado" : "Ver Compacto"}
+          {showAllMetrics ? "Ver Menos" : "Ver Todas"}
         </Button>
       </div>
 
@@ -203,7 +234,7 @@ export function ReportMetrics({ orders, className }: ReportMetricsProps) {
         ))}
       </div>
 
-      {!isCompact && (
+      {showAllMetrics && (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           {secondaryMetrics.map((metric, index) => (
             <MetricCard key={index} {...metric} />
