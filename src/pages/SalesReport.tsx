@@ -8,7 +8,7 @@ import { OrdersTable } from "@/components/reports/OrdersTable";
 import { ReportCharts } from "@/components/reports/ReportCharts";
 import { Button } from "@/components/ui/button";
 import { Sidebar } from "@/components/layout/Sidebar";
-import { export as ExportIcon, fileSpreadsheet } from "lucide-react";
+import { FileSpreadsheet } from "lucide-react";
 import { OrderDetailDrawer } from "@/components/reports/OrderDetailDrawer";
 import { toast } from "sonner";
 import { mockOrders } from "@/components/reports/data/mockData";
@@ -89,7 +89,7 @@ export default function SalesReport() {
                   onClick={handleExport}
                   className="border-purple-200 text-purple-700 hover:bg-purple-50 rounded-full w-full lg:w-auto"
                 >
-                  <fileSpreadsheet className="h-4 w-4 mr-2" />
+                  <FileSpreadsheet className="h-4 w-4 mr-2" />
                   Exportar Excel
                 </Button>
               </div>

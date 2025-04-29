@@ -5,7 +5,7 @@ import { Order } from "./types";
 import { 
   ChartPie, 
   ChartBar, 
-  CircleInfo
+  CircleIcon
 } from "lucide-react";
 import { 
   Tooltip,
@@ -14,6 +14,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 interface ReportMetricsProps {
   orders: Order[];
@@ -47,7 +48,7 @@ function MetricCard({ title, value, description, icon, color, tooltipText, chang
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <CircleInfo className="h-3.5 w-3.5 text-gray-400" />
+                      <CircleIcon className="h-3.5 w-3.5 text-gray-400" />
                     </TooltipTrigger>
                     <TooltipContent side="top" className="max-w-xs">
                       <p className="text-xs">{tooltipText}</p>
