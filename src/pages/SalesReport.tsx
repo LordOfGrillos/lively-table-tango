@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "@/components/layout/Header";
 import { DateRangePicker } from "@/components/reports/DateRangePicker";
 import { ReportMetrics } from "@/components/reports/ReportMetrics";
@@ -8,17 +8,45 @@ import { OrdersTable } from "@/components/reports/OrdersTable";
 import { ReportCharts } from "@/components/reports/ReportCharts";
 import { Button } from "@/components/ui/button";
 import { Sidebar } from "@/components/layout/Sidebar";
-import { FileSpreadsheet } from "lucide-react";
+import { FileSpreadsheet, ChevronLeft } from "lucide-react";
 import { OrderDetailDrawer } from "@/components/reports/OrderDetailDrawer";
 import { toast } from "sonner";
 import { mockOrders } from "@/components/reports/data/mockData";
 import { AIInsights } from "@/components/reports/AIInsights";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function SalesReport() {
-  const [dateRange, setDateRange] = useState<[Date | undefined, Date | undefined]>([
-    new Date(2025, 3, 1),
-    new Date(2025, 3, 28)
-  ]);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const periodParam = queryParams.get('period');
+
+  // Set default date range based on URL parameter
+  const getDefaultDateRange = () => {
+    const today = new Date();
+    const startDate = new Date(today);
+    const endDate = new Date(today);
+    
+    switch (periodParam) {
+      case 'day':
+        return [startDate, endDate];
+      case 'week':
+        startDate.setDate(today.getDate() - 7);
+        return [startDate, endDate];
+      case 'month':
+        startDate.setMonth(today.getMonth() - 1);
+        return [startDate, endDate];
+      default:
+        // Default to current month
+        startDate.setDate(1);
+        return [startDate, endDate];
+    }
+  };
+
+  const [dateRange, setDateRange] = useState<[Date | undefined, Date | undefined]>(
+    getDefaultDateRange() as [Date | undefined, Date | undefined]
+  );
+  
   const [filters, setFilters] = useState({
     brands: [],
     channels: [],
@@ -55,6 +83,15 @@ export default function SalesReport() {
     setSelectedOrder(null);
   };
 
+  const handleBackToHub = () => {
+    navigate('/reports');
+  };
+
+  // Update dateRange if periodParam changes
+  useEffect(() => {
+    setDateRange(getDefaultDateRange() as [Date | undefined, Date | undefined]);
+  }, [periodParam]);
+
   return (
     <div className="flex h-screen w-full overflow-hidden">
       <Sidebar />
@@ -67,6 +104,16 @@ export default function SalesReport() {
 
         <div className="flex-1 overflow-y-auto px-4 py-5">
           <div className="max-w-[1400px] mx-auto">
+            {/* Back to hub button */}
+            <Button
+              variant="ghost"
+              onClick={handleBackToHub}
+              className="mb-4 text-purple-700 hover:text-purple-900 hover:bg-purple-50 pl-1"
+            >
+              <ChevronLeft className="h-5 w-5 mr-1" />
+              Volver a Reportes
+            </Button>
+            
             {/* Top row with cards and date picker */}
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-5">
               <div className="lg:col-span-3 bg-white rounded-xl shadow-sm p-4 border border-purple-100 flex flex-col lg:flex-row justify-between items-center gap-4">

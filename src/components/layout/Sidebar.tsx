@@ -14,7 +14,8 @@ import {
   UserCog, 
   UtensilsCrossed,
   Coffee,
-  Monitor
+  Monitor,
+  ChartBar
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -186,12 +187,22 @@ export function Sidebar() {
             active={location.pathname === '/staff'}
             onClick={() => navigate('/staff')}
           />
+          <SidebarItem 
+            icon={ChartBar} 
+            label="Reportes & Analytics" 
+            active={location.pathname === '/reports' || location.pathname === '/sales-report'}
+            onClick={() => navigate('/reports')}
+          />
         </div>
 
         <div className="py-2">
           <div className="text-xs font-semibold text-gray-500 px-4 mb-2">SYSTEM</div>
-          <SidebarItem icon={Settings} label="Settings" />
-          <SidebarItem icon={FileText} label="Reports" />
+          <SidebarItem 
+            icon={Settings} 
+            label="Settings"
+            active={location.pathname === '/settings'}
+            onClick={() => navigate('/settings')} 
+          />
         </div>
       </div>
     </div>
